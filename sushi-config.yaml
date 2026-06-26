@@ -1,0 +1,73 @@
+# ╭─────────────────────────Commonly Used ImplementationGuide Properties───────────────────────────╮
+# │  The properties below are used to create the ImplementationGuide resource. The most commonly   │
+# │  used properties are included. For a list of all supported properties and their functions,     │
+# │  see: https://fshschool.org/docs/sushi/configuration/.                                         │
+# ╰────────────────────────────────────────────────────────────────────────────────────────────────╯
+id: fhir.nl.hinq-ion-inzage
+canonical: https://formelio.github.io/nl-hinq-ion-inzage-ig
+url: https://formelio.github.io/nl-hinq-ion-inzage-ig/ImplementationGuide/fhir.nl.hinq-ion-inzage
+name: HINQIONInzageIG
+title: Netherlands - HINQ ION Inzage Implementation Guide
+language: en-US
+description: Self-contained implementation guide for making HINQ ION data available to requesting parties. In this pilot stage it exposes Medicom data to a select set of organisations (the Rivo-Noord region viewers). Reuses building blocks from the Zorginzage 2026 template.
+status: draft # draft | active | retired | unknown
+version: 0.1.0
+fhirVersion: 4.0.1 # https://www.hl7.org/fhir/valueset-FHIR-version.html
+copyrightYear: 2026+
+releaseLabel: draft # ci-build | draft | qa-preview | ballot | trial-use | release | update | normative+trial-use
+license: EUPL-1.2 # https://www.hl7.org/fhir/valueset-spdx-license.html
+jurisdiction: urn:iso:std:iso:3166#NL "Netherlands" # https://www.hl7.org/fhir/valueset-jurisdiction.html
+publisher:
+  name: HINQ
+  url: https://www.hinq.nl
+
+
+# The dependencies property corresponds to IG.dependsOn. The key is the
+# package id and the value is the version (or dev/current).
+dependencies:
+  nictiz.fhir.nl.r4.nl-core: 0.12.0-beta.4
+
+# The pages property corresponds to IG.definition.page. Descriptive page
+# titles are used deliberately instead of the opaque "Volume 2a"-style names.
+pages:
+  index.md:
+    title: Home
+  functional.md:
+    title: Use Case & Roles
+  exchange.md:
+    title: Exchange Architecture
+  authentication.md:
+    title: Professional Authentication
+  credentials.md:
+    title: Credentials & Issuance
+  transactions.md:
+    title: Transactions
+  dataset.md:
+    title: Dataset
+  history.md:
+    title: History
+
+# The parameters property represents IG.definition.parameter.
+parameters:
+  excludettl: true
+  path-suppressed-warnings: input/ignoreWarnings.txt
+
+# ╭────────────────────────────────────────────menu.xml────────────────────────────────────────────╮
+# │ The menu property will be used to generate the input/menu.xml file. Descriptive labels mirror  │
+# │ the pages above.                                                                               │
+# ╰────────────────────────────────────────────────────────────────────────────────────────────────╯
+menu:
+  Home: index.html
+  Use Case & Roles: functional.html
+  Exchange Architecture: exchange.html
+  Professional Authentication: authentication.html
+  Credentials & Issuance: credentials.html
+  Transactions: transactions.html
+  Dataset: dataset.html
+  History: history.html
+
+# ╭──────────────────────────────────────────SUSHI flags───────────────────────────────────────────╮
+# │  The flags below configure aspects of how SUSHI processes FSH.                                 │
+# ╰────────────────────────────────────────────────────────────────────────────────────────────────╯
+instanceOptions:
+  manualSliceOrdering: true # true | false

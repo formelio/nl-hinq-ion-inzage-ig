@@ -1,0 +1,10 @@
+== Suppressed Messages ==
+
+# 01. The BSN NamingSystem is a well-known national system (http://fhir.nl/fhir/NamingSystem/bsn) that is not bundled in this IG.
+No definition could be found for URL value 'http://fhir.nl/fhir/NamingSystem/bsn'
+
+# 02. nl-core does not publish an ImplementationGuide canonical of its own; the dependency resolves fine via its package.
+A definition could not be found for Canonical URL 'http://fhir.org/packages/nictiz.fhir.nl.r4.nl-core/ImplementationGuide/nictiz.fhir.nl.r4.nl-core'
+
+# 03. The History page intentionally links to the versionless canonical home page.
+The link 'https://formelio.github.io/nl-hinq-ion-inzage-ig/' for "Implementation Guide" is a canonical link and is therefore unsafe with regard to versions

@@ -1,0 +1,27 @@
+# Temporary folders #
+#####################
+temp
+template
+output
+fsh-generated
+input-cache
+build-cache
+
+# Windows generated files #
+###########################
+Thumbs.db
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+
+# backup files #
+################
+*.bak
+*.bkp
+
+translations/
+
+# local content-preview venv (not part of the IG)
+.preview-venv/
