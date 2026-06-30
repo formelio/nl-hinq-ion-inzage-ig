@@ -26,8 +26,8 @@ Key steps:
   consent ([Consent](exchange.html#consent)), and returns the data.
 
 The access-token request is made against the data user's own Nuts node. Its body specifies the data
-holder's `authorization_server` (the hardcoded OAuth2 issuer URL), the use-case `scope`, and the
-credentials to present — including the `NutsEmployeeCredential`:
+holder's `authorization_server` (the hardcoded OAuth2 issuer URL), the use-case `scope`
+(`ion_inzage`), and the credentials to present — including the `NutsEmployeeCredential`:
 
 ```
 POST <internal Nuts interface>/internal/auth/v2/<subjectID>/request-service-access-token
@@ -35,7 +35,7 @@ Content-Type: application/json
 
 {
   "authorization_server": "https://<data-holder-node>/oauth2/<subject>",
-  "scope": "<use-case-identifier>",
+  "scope": "ion_inzage",
   "credentials": [
     {
       "@context": [

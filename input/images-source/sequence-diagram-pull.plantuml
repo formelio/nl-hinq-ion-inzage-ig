@@ -27,7 +27,7 @@ User -> req: request information for Patient
     ==get access token==
 
     req -> rn++: Get access token \nPOST /internal/auth/v2/{subjectID of Data user organisation}/request-service-access-token
-        note right of rn : body carries authorization_server (issuer URL) + scope (use-case)\nand NutsEmployeeCredential; URA, AGB and Zorgaanbiedertype credentials are presented from the wallet
+        note right of rn : body carries authorization_server (issuer URL) + scope (ion_inzage)\nand NutsEmployeeCredential; URA, AGB and Zorgaanbiedertype credentials are presented from the wallet
         rn <--> cn : nuts-nodes handle access token request, request is forwarded using value of "authorization_server" element in body
         rn --> req-- : Access token
     |||

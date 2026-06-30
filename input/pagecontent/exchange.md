@@ -156,8 +156,10 @@ To perform an exchange, the data user must know the following three things about
 2. **Resource endpoint** — the FHIR base URL where the actual data request is sent after the token
    has been obtained. The client adds the access token as a Bearer token, and the resource server
    validates it at the authorization server.
-3. **`scope`** — the use-case scope (for example `eOverdracht-sender`). Strictly speaking this is a
-   use-case constant rather than a property of the data holder, but the caller must know it.
+3. **`scope`** — the use-case scope, which for this use case is **`ion_inzage`**. Strictly speaking
+   this is a use-case constant rather than a property of the data holder, but the caller must know it.
+   The same identifier names the authorisation policy for this use case (see
+   [Authorisation](#authorisation)).
 
 End-state: the preferred future direction is the **Generieke Functie Adressering (GFA)**. Once it is
 available, this pilot would adopt it to replace the hardcoded endpoint configuration.
@@ -215,7 +217,7 @@ Conformance:
   (OTV, e.g. Mitz), or in another consent registry.
 
 Attributes available for the consent check include: URA of the data user, Zorgaanbiedertype of the
-data user, BSN of the patient, and a use-case identifier. The URA, AGB and Zorgaanbiedertype
+data user, BSN of the patient, and the use-case identifier (`ion_inzage`). The URA, AGB and Zorgaanbiedertype
 credentials needed for these checks are issued by HINQ (see
 [Authentication](#authentication-organisation-identity)).
 
