@@ -89,7 +89,9 @@ requesting organisation presents the following credentials, all issued by HINQ:
   consent checks (including Mitz) and for role/ZIB filtering.
 
 The `identifier` value of the URA credential carries the URA-number; the credentials are presented
-together in a single Verifiable Presentation when an access token is requested.
+together in a single Verifiable Presentation when an access token is requested. Which credentials
+must be presented is declared by the presentation definition for the `ion_inzage` scope (see
+[Authorisation](#authorisation)).
 
 ##### Why HINQ acts as issuer
 
@@ -173,6 +175,15 @@ passes the access policies of the data holder.
 In addition, **requesting parties are whitelisted at the source.** Only data users that HINQ has
 explicitly admitted to the pilot are accepted; a request from a party that is not on the whitelist is
 rejected regardless of the credentials it presents.
+
+Access is gated in two places. At the **token request**, the credentials a requester must present
+(the URA, AGB and Zorgaanbiedertype credentials — see
+[Authentication](#authentication-organisation-identity)) are demanded through a *presentation
+definition* bound to the `ion_inzage` scope: the data holder's authorization server publishes it, and
+the requester's Nuts node fetches it and builds a Verifiable Presentation that satisfies it before a
+token is issued. This presentation definition lives in the data holder's Nuts node `policy.directory`
+alongside the access policy below, and is independent of any discovery service (which this pilot does
+not use). The access policy below then governs the **data request** itself.
 
 - Policies are expressed in a domain-specific language called Rego, so everyone uses the same
   rulesets evaluated against a commonly agreed information model. Implementers are free not to

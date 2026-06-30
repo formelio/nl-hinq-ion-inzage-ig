@@ -18,8 +18,10 @@ Key steps:
 - The data user uses the data holder's **hardcoded** endpoints — the `authorization_server` (OAuth2
   issuer URL) and the FHIR base URL (see [Addressing](exchange.html#addressing)). There is no
   discovery step.
-- The data user requests an access token, presenting the organisation credentials (URA, AGB) and
-  federating the professional identity by including a `NutsEmployeeCredential` (see below).
+- The data user requests an access token. Its Nuts node fetches the presentation definition for the
+  `ion_inzage` scope from the data holder's authorization server and presents the matching
+  organisation credentials (URA, AGB, Zorgaanbiedertype) from its wallet, federating the professional
+  identity by including a `NutsEmployeeCredential` (see below).
 - The data user performs a Patient search on BSN (see [Patient context](#patient-context)), followed
   by the data request using the patient's technical identifier.
 - The data holder checks that the requestor is whitelisted, authorises the request, checks explicit
