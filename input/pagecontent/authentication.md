@@ -63,6 +63,42 @@ available for everyone — which is why the pilot relies on the local one.
 
 The exact request body is shown in [Transactions](transactions.html#pull).
 
+### Where the trust comes from
+
+A common and reasonable question is: if the professional's details are handed to the node as plain
+JSON, where does the verifiability come from?
+
+**The signature is at the presentation level, not on the employee credential.** You hand your *own*
+Nuts node the employee's claims (`identifier`, `initials`, `familyName`, `roleName`) as plain JSON in
+the `credentials` field of the token request — that is only the input. Your node then mints the
+`NutsEmployeeCredential` and wraps it in a **Verifiable Presentation that it signs with your
+organisation's private key**, the key bound to your organisation's `did:web`. There is no external
+issuer countersignature on the employee credential itself; per the Nuts documentation these
+credentials *"don't need to be signed"* because *"the presentation signature provides authenticity."*
+So the integrity and authenticity of the employee data come from the organisation's signature over
+the whole presentation, not from a third party vouching for the individual.
+
+This makes the trust chain: the HINQ-issued **URA and AGB** credentials prove *which organisation*
+this is (those **are** signed by a trusted issuer); the organisation then **cryptographically signs a
+presentation** that vouches for its own employee; and the data holder trusts the organisation's
+self-attestation about its own staff (which it logs for NEN 7513).
+
+What the data holder can therefore **verify cryptographically**:
+
+- the **presentation signature** — proving the request genuinely came from organisation X, untampered;
+- the **organisation's identity** — anchored in the HINQ-issued URA/AGB credentials;
+- **time validity** — the `NutsEmployeeCredential` carries `issuanceDate`/`expirationDate` (capped at
+  a maximum of one day per RFC019), and the resulting access token is short-lived, so a stale
+  credential is rejected.
+
+What the data holder **cannot** verify cryptographically, and must instead trust by conformance:
+
+- that the **mandatory confirmation page was actually shown and confirmed by a human**. RFC019 makes
+  presenting that page an *issuer* obligation; nothing in the credential proves a person clicked. The
+  data holder trusts that the requesting organisation's node implemented RFC019 correctly. The
+  assurance level is therefore **organisation-attested, not user-proven** — a personal authentication
+  means (such as Dezi) is what would later upgrade this to cryptographically proven user interaction.
+
 ### Limitations and future direction
 
 - **User experience.** The EmployeeID interaction (and its pop-up) is accepted for this pilot, but
