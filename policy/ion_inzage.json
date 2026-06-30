@@ -1,0 +1,77 @@
+{
+  "ion_inzage": {
+    "organization": {
+      "id": "pd_ion_inzage_organization",
+      "name": "HINQ ION Inzage - requesting organisation",
+      "purpose": "Authenticate the requesting care organisation for the ion_inzage use case.",
+      "format": {
+        "ldp_vc": {
+          "proof_type": ["JsonWebSignature2020"]
+        }
+      },
+      "input_descriptors": [
+        {
+          "id": "ura_credential",
+          "name": "URA credential (HINQ-issued) [PLACEHOLDER]",
+          "constraints": {
+            "fields": [
+              {
+                "path": ["$.type"],
+                "filter": { "type": "string", "const": "UraCredential" }
+              },
+              {
+                "path": ["$.issuer"],
+                "filter": { "type": "string", "const": "did:web:example.hinq.nl" }
+              },
+              {
+                "path": ["$.credentialSubject.organization.ura"],
+                "filter": { "type": "string" }
+              }
+            ]
+          }
+        },
+        {
+          "id": "agb_credential",
+          "name": "AGB credential (HINQ-issued) [PLACEHOLDER]",
+          "constraints": {
+            "fields": [
+              {
+                "path": ["$.type"],
+                "filter": { "type": "string", "const": "AgbCredential" }
+              },
+              {
+                "path": ["$.issuer"],
+                "filter": { "type": "string", "const": "did:web:example.hinq.nl" }
+              },
+              {
+                "path": ["$.credentialSubject.organization.agb"],
+                "filter": { "type": "string" }
+              }
+            ]
+          }
+        },
+        {
+          "id": "zorgaanbiedertype_credential",
+          "name": "Zorgaanbiedertype credential (HealthcareProviderRoleType, HINQ-issued) [PLACEHOLDER]",
+          "constraints": {
+            "fields": [
+              {
+                "path": ["$.type"],
+                "filter": { "type": "string", "const": "HealthcareProviderRoleTypeCredential" }
+              },
+              {
+                "path": ["$.issuer"],
+                "filter": { "type": "string", "const": "did:web:example.hinq.nl" }
+              },
+              {
+                "path": ["$.credentialSubject.organization.roleType"],
+                "filter": { "type": "string" }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "scope_policy": "profile_only"
+  }
+}

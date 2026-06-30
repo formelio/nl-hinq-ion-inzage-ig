@@ -183,7 +183,10 @@ definition* bound to the `ion_inzage` scope: the data holder's authorization ser
 the requester's Nuts node fetches it and builds a Verifiable Presentation that satisfies it before a
 token is issued. This presentation definition lives in the data holder's Nuts node `policy.directory`
 alongside the access policy below, and is independent of any discovery service (which this pilot does
-not use). The access policy below then governs the **data request** itself.
+not use). A starting-point presentation definition for the `ion_inzage` scope — with placeholder
+credential types and issuer DID — is provided in the
+[`policy/`](https://github.com/formelio/nl-hinq-ion-inzage-ig/tree/main/policy) directory of this
+repository. The access policy below then governs the **data request** itself.
 
 - Policies are expressed in a domain-specific language called Rego, so everyone uses the same
   rulesets evaluated against a commonly agreed information model. Implementers are free not to
