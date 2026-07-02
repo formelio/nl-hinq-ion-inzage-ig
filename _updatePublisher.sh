@@ -33,11 +33,11 @@ while [ "$#" -gt 0 ]; do
 done
 
 echo "Checking internet connection"
-curl -sSf tx.fhir.org > /dev/null
-
-if [ $? -ne 0 ] ; then
-  echo "Offline (or the terminology server is down), unable to update.  Exiting"
-  exit 1
+# Non-fatal connectivity probe. The publisher is downloaded from GitHub (see $dlurl below), not from
+# tx.fhir.org, and tx.fhir.org's root can return HTTP 404, which previously aborted the whole build.
+# Warn but continue; the actual download step fails loudly if the host is genuinely unreachable.
+if ! curl -sSfL -o /dev/null "$pubsource" ; then
+  echo "Warning: connectivity probe to $pubsource failed; continuing anyway."
 fi
 
 if [ ! -d "$input_cache_path" ] ; then
