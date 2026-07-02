@@ -71,8 +71,6 @@ Addressing is out of scope for this pilot (see [Exchange Architecture](exchange.
 - [Exchange Architecture](exchange.html) — the technical agreements: exchange patterns,
   identification, authentication, addressing, authorisation, consent and network
   security (in English).
-- [Professional Authentication](authentication.html) — a detailed explanation of the Nuts EmployeeID
-  mechanism (in English).
 - [Credentials & Issuance](credentials.html) — the organisation credentials, how HINQ issues them,
   and the validity/recheck/revocation flows (in English).
 - [Transactions](transactions.html) — the individual transactions of the pull flow (in English).

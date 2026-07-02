@@ -36,8 +36,6 @@ pages:
     title: Use Case & Roles
   exchange.md:
     title: Exchange Architecture
-  authentication.md:
-    title: Professional Authentication
   credentials.md:
     title: Credentials & Issuance
   transactions.md:
@@ -60,7 +58,6 @@ menu:
   Home: index.html
   Use Case & Roles: functional.html
   Exchange Architecture: exchange.html
-  Professional Authentication: authentication.html
   Credentials & Issuance: credentials.html
   Transactions: transactions.html
   Dataset: dataset.html

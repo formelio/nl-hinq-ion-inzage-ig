@@ -14,7 +14,7 @@ Key steps:
 
 - The healthcare professional authenticates in the data user application (the Rivo-Noord viewer). The
   application creates a user session and stores the user info needed for the `NutsEmployeeCredential`
-  (see [Professional Authentication](authentication.html)).
+  (see [Authentication](exchange.html#authentication-professional-identity)).
 - The data user uses the data holder's **hardcoded** endpoints — the `authorization_server` (OAuth2
   issuer URL) and the FHIR base URL (see [Addressing](exchange.html#addressing)). There is no
   discovery step.
@@ -56,10 +56,8 @@ Content-Type: application/json
 ```
 
 The `identifier` is a unique identifier for the user within the organisation — an e-mail address or
-an employee number. In Nuts v6 the `NutsEmployeeCredential` is **self-attested and non-interactive**:
-it is included in the token request without any confirmation page or challenge (the older RFC019 HTML
-challenge is a Nuts v5 mechanism and does not apply). See [Professional
-Authentication](authentication.html).
+an employee number. The `NutsEmployeeCredential` is self-attested and included directly in the token
+request; see [Authentication](exchange.html#authentication-professional-identity).
 
 The organisation credentials (URA, AGB and Zorgaanbiedertype) are presented from the data user's Nuts
 node wallet; see [Authentication](exchange.html#authentication-organisation-identity).

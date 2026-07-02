@@ -67,8 +67,7 @@ transport layer; see [Network security](#network-security).
 Healthcare professionals are identified using a local employee identifier, with local employee name
 and local employee role as non-identifying attributes. All professionals have a local employee
 number, while a national healthcare professional identifier and role are not yet available for all
-professionals. The mechanism is described in detail in [Professional
-Authentication](authentication.html).
+professionals.
 
 ### Authentication
 
@@ -114,27 +113,19 @@ flexibility to switch to such an alternative per credential, without re-bundling
 How an organisation obtains these credentials, and the validity, recheck and revocation flows, are
 described in [Credentials & Issuance](credentials.html).
 
-#### Authentication — professional identity (EmployeeID)
+#### Authentication — professional identity
 
 The healthcare professional's identity is federated from the data user to the data holder by
-including a `NutsEmployeeCredential` in the access-token request. In Nuts v6 this credential is
-**self-attested and non-interactive** — there is no confirmation pop-up. The professional is
-identified by a local identifier (the "EmployeeID" — an e-mail address or employee number), with
-name and role as additional attributes.
+including a self-attested `NutsEmployeeCredential` in the access-token request. The professional is
+identified by a local employee identifier (an e-mail address or employee number), with the local
+employee name and role as non-identifying attributes. This information is needed at the data holder
+for NEN 7513 audit logging.
 
 - Data users **MUST** federate healthcare professional identity using a `NutsEmployeeCredential`
   (see the request body in [Transactions](transactions.html#pull)).
 
-The professional's identifying information is needed at the data holder for NEN 7513 audit logging,
-which the `NutsEmployeeCredential` carries, and it can be used now independent of national
-initiatives (e.g. Dezi) that are not yet in place. **Because this mechanism is central to the pilot,
-it is documented in full on a dedicated page: [Professional
-Authentication](authentication.html)** — including a note that the older RFC019 HTML challenge is
-outdated and does not apply to Nuts v6.
-
-> **Caveat: assurance is app-level.** Because the credential is self-attested, the "real person
-> behind the request" is established by the data user application's own login (2FA, personal
-> accounts), not proven by Nuts. This is accepted for this pilot.
+See the Nuts Wiki page on [Requesting Access](https://wiki.nuts.nl/books/implementing-a-nuts-use-case/page/requesting-access-outbound)
+for context.
 
 #### Vendor authentication
 
