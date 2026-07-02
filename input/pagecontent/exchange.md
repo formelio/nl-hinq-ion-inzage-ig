@@ -113,16 +113,27 @@ flexibility to switch to such an alternative per credential, without re-bundling
 How an organisation obtains these credentials, and the validity, recheck and revocation flows, are
 described in [Credentials & Issuance](credentials.html).
 
-#### Authentication — professional identity
+#### Person authentication — EmployeeID
 
 The healthcare professional's identity is federated from the data user to the data holder by
-including a self-attested `NutsEmployeeCredential` in the access-token request. The professional is
-identified by a local employee identifier (an e-mail address or employee number), with the local
-employee name and role as non-identifying attributes. This information is needed at the data holder
-for NEN 7513 audit logging.
+including a `NutsEmployeeCredential` in the access-token request. The professional is identified by a
+local employee identifier (the "EmployeeID"), with local name and role as non-identifying attributes.
 
 - Data users **MUST** federate healthcare professional identity using a `NutsEmployeeCredential`
   (see the request body in [Transactions](transactions.html#pull)).
+
+The `NutsEmployeeCredential` is **self-attested** by the data user's system, in line with the
+Zorginzage authentication approach (Nuts v6). The data user's application authenticates the
+professional in its own user session and populates the credential fields (name, role, identifier)
+from that session. The data user's system **MUST** supply these fields and is expected to have
+verified them, so that the data holder can meet its NEN 7513 audit logging obligations. This works
+today, independent of national initiatives (e.g. Dezi) that are not yet in place.
+
+**No interactive challenge.** The credential is built from the data user's own authenticated session;
+there is explicitly no HTML challenge or pop-up. This differs from the previous Nuts v5 employee
+identity means ([RFC019](https://nuts-foundation.gitbook.io/drafts/rfc/rfc019-employee-identity-means)),
+which hosted a web page for the professional to confirm their details. Under the self-attested model
+the data user is trusted to have authenticated the professional and checked the supplied fields.
 
 See the Nuts Wiki page on [Requesting Access](https://wiki.nuts.nl/books/implementing-a-nuts-use-case/page/requesting-access-outbound)
 for context.
