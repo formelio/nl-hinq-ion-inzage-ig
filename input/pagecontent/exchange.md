@@ -135,8 +135,13 @@ identity means ([RFC019](https://nuts-foundation.gitbook.io/drafts/rfc/rfc019-em
 which hosted a web page for the professional to confirm their details. Under the self-attested model
 the data user is trusted to have authenticated the professional and checked the supplied fields.
 
-See the Nuts Wiki page on [Requesting Access](https://wiki.nuts.nl/books/implementing-a-nuts-use-case/page/requesting-access-outbound)
-for context.
+**Implementation.** The data user passes the employee fields directly in the
+`request-service-access-token` call; the Nuts node places them in the claims of the returned access
+token, so the application does **not** need to render an HTML page from its Nuts node to obtain the
+token. For the exact request/response shape and API details, see the Nuts node
+[auth v2 API documentation](https://nuts-node.readthedocs.io/en/stable/pages/integrating/api.html)
+and the [Requesting Access](https://wiki.nuts.nl/books/implementing-a-nuts-use-case/page/requesting-access-outbound)
+wiki page.
 
 #### Vendor authentication
 
