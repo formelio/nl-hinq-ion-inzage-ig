@@ -37,7 +37,7 @@ User -> req: request information for Patient
     note right of req: POST-based Patient search on BSN
     req -> PEP++: POST /fhir/Patient/_search
     PEP -> cn++ : introspect access token\nPOST /internal/auth/v2/accesstoken/introspect
-    PEP <-- cn-- : valid token + requesting_URA + USER{identifier,initials,familyName,roleName}
+    PEP <-- cn-- : valid token + requesting_URA + USER{identifier,name,roleName}
     PEP -> PEP: Authorization (requestor whitelisted + URA present)\nand explicit consent check (e.g. local or Mitz)
     PEP -> Fhir++: POST /fhir/Patient?search
     return: Patient Fhir resource (with patient-id)
@@ -53,7 +53,7 @@ User -> req: request information for Patient
     loop For each resource except Patient
         req -> PEP++: GET /fhir/{resource}?patient={patient-id}
             PEP -> cn++ : introspect access token\nPOST /internal/auth/v2/accesstoken/introspect
-                PEP <-- cn-- : valid token + requesting_URA + USER{identifier,initials,familyName,roleName}
+                PEP <-- cn-- : valid token + requesting_URA + USER{identifier,name,roleName}
             PEP -> PEP: Authorization \n(requestor whitelisted + explicit consent)
             PEP -> Fhir++: GET /fhir/{resource}?patient={patient-id}
             return: Fhir resource

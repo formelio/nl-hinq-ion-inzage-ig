@@ -117,8 +117,9 @@ described in [Credentials & Issuance](credentials.html).
 #### Authentication — professional identity (EmployeeID)
 
 The healthcare professional's identity is federated from the data user to the data holder by
-including a `NutsEmployeeCredential` in the access-token request. The professional is identified by a
-local identifier (the "EmployeeID" — an e-mail address or employee number), with initials, family
+including a `NutsEmployeeCredential` in the access-token request. In Nuts v6 this credential is
+**self-attested and non-interactive** — there is no confirmation pop-up. The professional is
+identified by a local identifier (the "EmployeeID" — an e-mail address or employee number), with
 name and role as additional attributes.
 
 - Data users **MUST** federate healthcare professional identity using a `NutsEmployeeCredential`
@@ -128,11 +129,12 @@ The professional's identifying information is needed at the data holder for NEN 
 which the `NutsEmployeeCredential` carries, and it can be used now independent of national
 initiatives (e.g. Dezi) that are not yet in place. **Because this mechanism is central to the pilot,
 it is documented in full on a dedicated page: [Professional
-Authentication](authentication.html).**
+Authentication](authentication.html)** — including a note that the older RFC019 HTML challenge is
+outdated and does not apply to Nuts v6.
 
-> **Caveat: the user experience is limited.** The EmployeeID interaction (and its pop-up) is
-> accepted for this pilot, but improving or removing it is a likely change before a larger-scale
-> pilot.
+> **Caveat: assurance is app-level.** Because the credential is self-attested, the "real person
+> behind the request" is established by the data user application's own login (2FA, personal
+> accounts), not proven by Nuts. This is accepted for this pilot.
 
 #### Vendor authentication
 

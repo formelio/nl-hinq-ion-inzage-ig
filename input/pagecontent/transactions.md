@@ -47,8 +47,7 @@ Content-Type: application/json
       "type": ["VerifiableCredential", "NutsEmployeeCredential"],
       "credentialSubject": {
         "identifier": "j.doe@example.nl",
-        "initials": "J.",
-        "familyName": "Doe",
+        "name": "John Doe",
         "roleName": "Nurse"
       }
     }
@@ -57,8 +56,9 @@ Content-Type: application/json
 ```
 
 The `identifier` is a unique identifier for the user within the organisation — an e-mail address or
-an employee number. Before the credential is issued, the professional must complete the **mandatory**
-EmployeeIdentity confirmation page (always shown); see [Professional
+an employee number. In Nuts v6 the `NutsEmployeeCredential` is **self-attested and non-interactive**:
+it is included in the token request without any confirmation page or challenge (the older RFC019 HTML
+challenge is a Nuts v5 mechanism and does not apply). See [Professional
 Authentication](authentication.html).
 
 The organisation credentials (URA, AGB and Zorgaanbiedertype) are presented from the data user's Nuts
