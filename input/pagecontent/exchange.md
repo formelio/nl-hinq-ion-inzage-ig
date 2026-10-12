@@ -1,255 +1,295 @@
 This volume contains the technical agreements for making HINQ ION data available. The content is
-adapted from the Zorginzage 2026 building blocks so that this guide is self-contained; the HINQ ION
+adapted from the Zorginzage 2026 building blocks so that this guide is self-contained. The HINQ ION
 Inzage-specific choices are noted where they apply.
 
-### Exchange pattern: gericht bevragen
+### Overview
 
-This exchange uses the communication pattern "gericht bevragen" (targeted querying). See the
+#### Exchange Pattern: Gericht Bevragen
+
+This exchange uses the communication pattern "gericht bevragen", which means targeted querying. The
+data user already knows that data is present at the data holder. It requests the data from that data
+holder and receives or retrieves it. The pattern is described in the
 [Whitepaper Communicatiepatronen](https://www.datavoorgezondheid.nl/documenten/2025/07/14/whitepaper-communicatiepatronen-vws)
-of the Ministry of Health (in Dutch).
+of the Ministry of Health. This whitepaper is in Dutch.
 
-- **Gericht bevragen** — the data user already knows that data is present at the data holder,
-  requests the data from that data holder, and receives or retrieves it.
+There is a single, known data holder, HINQ ION, and its endpoints are known up front. Every exchange
+in this pilot is therefore gericht bevragen on a patient the data user already has in context.
 
-There is a single, known data holder (HINQ ION) whose endpoints are known up front, so every exchange
-in this pilot is gericht bevragen on a patient the data user already has in context.
+#### Principles
+
+- This specification makes use of did:web and verifiable credentials. This is commonly referred to as
+  "Nuts v6".
+- This specification makes use of FHIR R4 APIs.
+
+#### Exchange Flow
 
 A data exchange consists of the following steps:
 
-1. **Authentication** — the data user authenticates at organisation and person level.
-2. **Patient search** — the data user searches the patient on BSN at the data holder to obtain the
+1. **Access token request.** The data user requests an access token for one specific patient. It
+   authenticates at organisation and person level and supplies the patient's BSN in a
+   `NutsBSNCredential`. The token is bound to that patient. See
+   [Identification and Authentication](#identification-and-authentication) and
+   [NutsBSNCredential](#nutsbsncredential).
+2. **Patient search.** The data user searches the patient on BSN at the data holder to obtain the
    patient's technical identifier.
-3. **Data request** — the data user requests data using that technical identifier.
-4. **Authorisation** — the data holder checks that the requestor is whitelisted, authorises the
-   request, and checks explicit patient consent (see [Consent](#consent)) before returning data.
+3. **Data request.** The data user requests data using that patient's technical identifier.
 
-Addressing is **not** a step in this pilot: the data user is assumed to already know the data
-holder's endpoints (see [Addressing](#addressing)).
+The data holder performs four access checks. The details are in [Access control](#access-control).
 
-### Principles
+| Check | At the token request | At every FHIR request |
+|-------|:--:|:--:|
+| The organisation credentials match the presentation definition | ✓ | |
+| The request comes from a whitelisted IP address | | ✓ |
+| The access rules are met | | ✓ |
+| Explicit patient consent is present | | ✓ |
 
-- This specification makes use of did:web and verifiable credentials (commonly referred to as
-  "Nuts v6").
-- This specification makes use of FHIR R4 APIs.
+Addressing is **not** a step in this pilot. The data user is assumed to already know the data
+holder's endpoints.
 
-### Identification
-
-#### Healthcare organisations — identifier: URA
-
-Healthcare organisations are identified using the URA-number (UZI-Register Abonneenummer,
-OID `2.16.528.1.1007.3.3`).
-
-Rationale:
-
-- Identification by URA conforms to the national information model for healthcare organisations
-  (Zorginformatiebouwsteen Zorgaanbieder, [zibs.nl](https://zibs.nl/wiki/Zorgaanbieder-v3.6(2024NL))).
-- The URA-number is issued by a public organisation (CIBG).
-
-A global, unique organisation identifier is required for this exchange, and the URA is that
-identifier. How the URA is made verifiable in this pilot — via a HINQ-issued credential rather than a
-UZI server certificate — is described under [Authentication](#authentication-organisation-identity).
-
-#### Healthcare organisations — HealthcareProviderRoleType (Zorgaanbiedertype)
-
-Healthcare organisations express which type(s) of healthcare organisation they are through a
-HealthcareProviderRoleType (Zorgaanbiedertype) attribute. This type is needed for consent checks at
-the source system (including OTV-consent via Mitz) and for role/ZIB filtering. In this pilot the
-corresponding credential is required and is issued by HINQ (see
-[Authentication](#authentication-organisation-identity)).
-
-#### Vendor organisations
-
-Vendor organisations are not identified by a business identifier. They are authenticated at the
-transport layer; see [Network security](#network-security).
-
-#### Healthcare professionals — local employee identifier
-
-Healthcare professionals are identified using a local employee identifier, with local employee name
-and local employee role as non-identifying attributes. All professionals have a local employee
-number, while a national healthcare professional identifier and role are not yet available for all
-professionals.
-
-### Authentication
-
-Authentication establishes a verifiable identity for the parties in a data exchange, at three
-levels: healthcare organisations (by URA), healthcare professionals (federated from data user to
-data holder), and vendor organisations (at the transport layer). Organisation- and
-professional-level authentication is performed via the standard did:web-based Nuts processes.
-
-#### Authentication — organisation identity
-
-A global organisation identifier is required, and the agreed identifier is the **URA**. The
-requesting organisation presents the following credentials, all issued by HINQ:
-
-- **URA credential** — the primary organisation identifier, verified by HINQ against ZorgAB.
-- **AGB credential** — an extra existence/match check confirming that the care provider exists and
-  corresponds to the organisation, verified by HINQ against Vektis.
-- **Zorgaanbiedertype credential** (HealthcareProviderRoleType) — required for the source system's
-  consent checks (including Mitz) and for role/ZIB filtering.
-
-The `identifier` value of the URA credential carries the URA-number; the credentials are presented
-together in a single Verifiable Presentation when an access token is requested. Which credentials
-must be presented is declared by the presentation definition for the `ion_inzage` scope (see
-[Authorisation](#authorisation)).
-
-##### Why HINQ acts as issuer
-
-There is no authoritative national issuer for the URA-as-a-credential today; such an issuer (for
-example at the CIBG) is the real end solution. Until it exists, the available fallback — deriving the
-URA from a UZI server X509 certificate, as in Zorginzage/PZP — has known downsides: every vendor must
-obtain and manage its own certificate, which costs money and requires someone to maintain and
-coordinate all of those certificates, a significant ongoing time investment.
-
-On top of that, there is simply no issuer at all for the other credentials this use case needs — the
-Zorgaanbiedertype today, and potentially further ones in the future (such as a region-membership
-credential). It therefore makes sense to have a single trusted party that manually performs the
-checks and then issues these credentials. HINQ is the logical party to take this on for the pilot: as
-a non-profit care cooperation it already performs these checks at scale for several hundred
-organisations across various care sectors, and therefore has both the required legal basis and the
-operational experience for this issuance and maintenance. This is on the explicit understanding that the role is handed over once a better,
-authoritative alternative becomes available. Keeping each credential separate preserves the
-flexibility to switch to such an alternative per credential, without re-bundling.
-
-How an organisation obtains these credentials, and the validity, recheck and revocation flows, are
-described in [Credentials & Issuance](credentials.html).
-
-#### Person authentication — EmployeeID
-
-The healthcare professional's identity is federated from the data user to the data holder by
-including a `NutsEmployeeCredential` in the access-token request. The professional is identified by a
-local employee identifier (the "EmployeeID"), with local name and role as non-identifying attributes.
-
-- Data users **MUST** federate healthcare professional identity using a `NutsEmployeeCredential`
-  (see the request body in [Transactions](transactions.html#pull)).
-
-The `NutsEmployeeCredential` is **self-attested** by the data user's system, in line with the
-Zorginzage authentication approach (Nuts v6). The data user's application authenticates the
-professional in its own user session and populates the credential fields (name, role, identifier)
-from that session. The data user's system **MUST** supply these fields and is expected to have
-verified them, so that the data holder can meet its NEN 7513 audit logging obligations. This works
-today, independent of national initiatives (e.g. Dezi) that are not yet in place.
-
-**No interactive challenge.** The credential is built from the data user's own authenticated session;
-there is explicitly no HTML challenge or pop-up. This differs from the previous Nuts v5 employee
-identity means ([RFC019](https://nuts-foundation.gitbook.io/drafts/rfc/rfc019-employee-identity-means)),
-which hosted a web page for the professional to confirm their details. Under the self-attested model
-the data user is trusted to have authenticated the professional and checked the supplied fields.
-
-**Implementation.** The data user passes the employee fields directly in the
-`request-service-access-token` call; the Nuts node places them in the claims of the returned access
-token, so the application does **not** need to render an HTML page from its Nuts node to obtain the
-token. For the exact request/response shape and API details, see the Nuts node
-[auth v2 API documentation](https://nuts-node.readthedocs.io/en/stable/pages/integrating/api.html)
-and the [Requesting Access](https://wiki.nuts.nl/books/implementing-a-nuts-use-case/page/requesting-access-outbound)
-wiki page.
-
-#### Vendor authentication
-
-Vendor organisations are authenticated at the transport layer through mTLS; see
-[Network security](#network-security).
-
-### Addressing
+### Endpoints and Configuration
 
 Addressing would discover the FHIR base URL and the authorisation server URL of a data holder.
+**In this pilot, addressing is out of scope.** Instead, the data user is **assumed to already know
+the data holder's endpoints**. The organisation configures these endpoints as fixed values. There is
+therefore no discovery step.
 
-**In this pilot, addressing is out of scope.** Because there is a single, known data holder
-(HINQ ION) and the number of participants is very small, hosting a discovery service is not
-worthwhile — it is sub-optimal and adds significant technical complexity for little benefit at this
-scale. Instead, the data user is **assumed to already know the data holder's endpoints**, which are
-configured (hardcoded) by the organisation. There is therefore no discovery step.
+#### What the Data User Must Know?
 
 To perform an exchange, the data user must know the following three things about the data holder:
 
-1. **`authorization_server`** — the data holder's OAuth2 issuer URL, of the form
-   `https://<node>/oauth2/<subject>`. This immediately identifies the data holder, because its
-   subject/DID is contained in the URL; from it the Nuts node resolves the data holder's metadata and
-   keys.
-2. **Resource endpoint** — the FHIR base URL where the actual data request is sent after the token
-   has been obtained. The client adds the access token as a Bearer token, and the resource server
-   validates it at the authorization server.
-3. **`scope`** — the use-case scope, which for this use case is **`ion_inzage`**. Strictly speaking
-   this is a use-case constant rather than a property of the data holder, but the caller must know it.
-   The same identifier names the authorisation policy for this use case (see
-   [Authorisation](#authorisation)).
+1. **`authorization_server`.** This is the data holder's OAuth2 issuer URL, of the form
+   `https://<node>/oauth2/<subject>`. The URL immediately identifies the data holder, because it
+   contains the data holder's subject/DID. From it, the Nuts node resolves the data holder's metadata
+   and keys.
+2. **Resource endpoint.** This is the FHIR base URL where the actual data request is sent after the
+   token has been obtained. The client adds the access token as a Bearer token. The resource server
+   validates the token at the authorization server.
+3. **`scope`.** This is the use-case scope. For this use case it is **`ion_inzage`**. Strictly
+   speaking, the scope is a use-case constant rather than a property of the data holder, but the
+   caller must know it. The same identifier names the authorisation policy for this use case. See
+   [Access control](#access-control).
 
-End-state: the preferred future direction is the **Generieke Functie Adressering (GFA)**. Once it is
-available, this pilot would adopt it to replace the hardcoded endpoint configuration.
+#### Why Is There No Discovery?
 
-### Authorisation
+There is a single known data holder, HINQ ION, and the number of participants is very small.
+Hosting a discovery service is therefore not worthwhile. It is sub-optimal and adds significant
+technical complexity for little benefit at this scale.
 
-This specification follows the Zorginzage authorisation model: a fine-grained, policy-based access
-model rather than a role-based model. Whether a requestor gets access depends on whether the request
-passes the access policies of the data holder.
+The preferred end-state is the **Generieke Functie Adressering**, or GFA. Once it is available, this
+pilot would adopt it to replace the fixed endpoint configuration.
 
-In addition, **requesting parties are whitelisted at the source.** Only data users that HINQ has
-explicitly admitted to the pilot are accepted; a request from a party that is not on the whitelist is
-rejected regardless of the credentials it presents.
+### Identification and Authentication
 
-Access is gated in two places. At the **token request**, the credentials a requester must present
-(the URA, AGB and Zorgaanbiedertype credentials — see
-[Authentication](#authentication-organisation-identity)) are demanded through a *presentation
-definition* bound to the `ion_inzage` scope: the data holder's authorization server publishes it, and
-the requester's Nuts node fetches it and builds a Verifiable Presentation that satisfies it before a
-token is issued. This presentation definition lives in the data holder's Nuts node `policy.directory`
-alongside the access policy below, and is independent of any discovery service (which this pilot does
-not use). A starting-point presentation definition for the `ion_inzage` scope — with placeholder
-credential types and issuer DID — is provided in the
-[`policy/`](https://github.com/formelio/nl-hinq-ion-inzage-ig/tree/main/policy) directory of this
-repository. The access policy below then governs the **data request** itself.
+Authentication establishes a verifiable identity for the parties in a data exchange. It works at
+three levels:
 
-- Policies are expressed in a domain-specific language called Rego, so everyone uses the same
-  rulesets evaluated against a commonly agreed information model. Implementers are free not to
-  implement a Rego interpreter, as long as their solution follows exactly the same rules as the
-  Rego policy for this use case.
-- The applicable policies for this use case are version-controlled in a Git repository for this
-  pilot.
-- The data holder operates a policy enforcement point (PEP) and has access to a policy decision
-  point (PDP), e.g. the PDP functionality in the Nuts Knooppunt.
+- Healthcare organisations are authenticated by their URA.
+- The identity of healthcare professionals is federated from the data user to the data holder.
+- Vendor organisations are authenticated at the transport layer with mTLS.
 
-Conformance:
+Organisation-level and professional-level authentication use the standard did:web-based Nuts
+processes.
 
-- The data holder organisation **MUST** reject requests from organisations that are not on the
-  requestor whitelist.
-- The data holder organisation **MUST** enforce the rules described in the commonly defined Rego
-  policy for this use case.
-- The data holder organisation **MAY** implement a Rego interpreter.
+#### Healthcare Organisation
 
-The policy **MUST** take the following into account:
+##### Required Credentials
 
-- Presence of the URA identifier of the requesting organisation **MUST** be checked.
-- When the request is for a FHIR endpoint, conformance to a CapabilityStatement **MUST** be
-  evaluated.
-- Patient context is mandatory: for search interactions a patient id or BSN **MUST** be derivable
-  from the query; for read interactions the requested resource **MUST** have a direct link to a
-  patient.
-- Explicit patient consent **MUST** be checked before returning data (see [Consent](#consent)).
+The requesting organisation presents the following credentials. HINQ issues the URA, AGB and
+Zorgaanbiedertype credentials. [Credentials & Issuance](credentials.html) describes how HINQ
+verifies, issues and maintains them.
 
-### Consent
+| Credential | Purpose | Verified against |
+|------------|---------|------------------|
+| **URA Credential** | The primary organisation identifier. | ZorgAB |
+| **AGB Credential** | An extra existence and match check. It confirms that the care provider exists and corresponds to the organisation. | Vektis |
+| **Zorgaanbiedertype Credential** | Expresses which types of healthcare organisation the requestor is. Its technical name is `HealthcareProviderRoleTypeCredential`. The source system needs it for the consent check at Mitz. It is also used for role and ZIB filtering. | Nictiz codelist |
+| **X509Credential** | A standard Nuts credential derived from the organisation's UZI server certificate. It carries the UZI, URA and AGB. HINQ does not issue it. | The UZI certificate chain |
+
+An organisation that already has an `X509Credential` MAY present it instead of the URA Credential
+and the AGB Credential. The `Zorgaanbiedertype Credential` is always required.
+
+##### Why HINQ Acts as Issuer
+
+There is no authoritative issuer yet for these credentials. HINQ therefore performs the checks and
+issues them for the pilot. The role is handed over once an authoritative alternative exists.
+[Credentials & Issuance](credentials.html) describes the full rationale. It also describes how an
+organisation obtains the credentials and how validity, rechecks and revocation work.
+
+#### Healthcare Professional
+
+##### NutsEmployeeCredential
+
+Healthcare professionals are identified using a local employee identifier, called the "EmployeeID".
+The local employee name and local employee role are added as non-identifying attributes. All
+professionals have a local employee number. A national healthcare professional identifier and role
+are not yet available for all professionals.
+
+The healthcare professional's identity **MUST** be federated from the data user to the data holder. The data
+user does this by including a `NutsEmployeeCredential` in the access-token request. The request body is shown in [Transactions](transactions.html#pull).
+
+The `NutsEmployeeCredential` is **self-attested** by the data user's system. This is in line with the
+Zorginzage authentication approach in Nuts v6. The data user's application authenticates the
+professional in its own user session. It fills the credential fields from that session. These fields
+are the name, the role and the identifier. The data user's system **MUST** supply these fields and is
+expected to have verified them. This lets the data holder meet its NEN 7513 audit logging
+obligations. The approach works today, independent of national initiatives such as Dezi that are not
+yet in place.
+
+##### Implementation
+
+**No interactive challenge.** The credential is built from the data user's own authenticated session.
+There is explicitly no HTML challenge or pop-up. This differs from the previous Nuts v5 employee
+identity means, described in
+[RFC019](https://nuts-foundation.gitbook.io/drafts/rfc/rfc019-employee-identity-means). That approach
+hosted a web page for the professional to confirm their details. Under the self-attested model the
+data user is trusted to have authenticated the professional and checked the supplied fields.
+
+The data user passes the employee fields directly in the `request-service-access-token` call. The
+Nuts node places them in the claims of the returned access token. The application therefore does
+**not** need to render an HTML page from its Nuts node to obtain the token. The exact
+request/response shape and API details are in the Nuts node
+[auth v2 API documentation](https://nuts-node.readthedocs.io/en/stable/pages/integrating/api.html)
+and on the [Requesting Access](https://wiki.nuts.nl/books/implementing-a-nuts-use-case/page/requesting-access-outbound)
+wiki page.
+
+#### Vendor Organisation
+
+Vendor organisations are not identified by a business identifier. They are authenticated at the
+transport layer through mTLS. See [Network security](#network-security).
+
+### Access Control
+
+This specification follows the Zorginzage authorisation model. This is a fine-grained, policy-based
+access model rather than a role-based model. Whether a requestor gets access depends on whether the
+request passes the access policies of the data holder.
+
+Access is gated in two places: at the token request and at the data request.
+
+#### Token Request
+
+The data user requests the access token from its own Nuts node. The access-token request contains
+the organisation credentials, a `NutsEmployeeCredential` and a `NutsBSNCredential`. Together they
+identify the requesting organisation, the healthcare professional and the patient.
+
+##### Organisation Credentials
+
+The requester must present the [required credentials](#required-credentials). A *presentation
+definition* bound to the `ion_inzage` scope demands these credentials. The data holder's
+authorization server publishes this presentation definition. The requester's Nuts node fetches it and
+builds a Verifiable Presentation that satisfies it. Only then is a token issued. [Policy](policy.html)
+describes the presentation definition and how it is loaded into the data holder's Nuts node.
+
+##### NutsEmployeeCredential
+
+This credential federates the identity of the healthcare professional to the data holder. The data 
+user's system self-attests it. [Healthcare Professional](#healthcare-professional) describes the 
+credential fields and how the data user fills them.
+
+When the PDP introspects the token, it gets the professional's identifier and role back. The PDP uses
+them for the consent check. See [Consent](#consent).
+
+- The access-token request **MUST** include a `NutsEmployeeCredential`.
+
+##### NutsBSNCredential
+
+Every access token in this use case is bound to a single patient. The data user binds the token by
+including a `NutsBSNCredential` in the access-token request. This credential carries the patient's
+BSN. It works the same way as the [`NutsEmployeeCredential`](#healthcare-professional).
+
+When the PDP introspects the token at the data holder's Nuts node, it gets the BSN back. The PDP uses
+it for the consent check and passes it on with the request.
+
+**Why patient-bound tokens.** By default, Nuts scopes access tokens to the organisation and use case,
+and the data holder derives the patient from each request. Nuts leaves this choice to the use case. This
+use case binds every token to one patient for the following reasons:
+
+- **Smaller impact of misuse.** An organisation-level token can be used for any patient at the data
+  holder. A leaked or misused patient-bound token exposes only one patient.
+- **Trusted patient context.** The patient is part of the signed token, not of the unsigned HTTP
+  request. A tampered token is rejected.
+- **Every patient access passes the authorization server.** The data user needs a new token for each
+  patient. This gives the data holder one place to apply rate limits, logging and alerting.
+- **No request-body inspection.** The patient search is a POST request with the BSN in the body. The
+  PDP does not read request bodies. The token gives the PDP the BSN for every request, including the
+  patient search.
+
+The `NutsBSNCredential` is self-attested, so it does not prove the requester's relationship with the
+patient. It narrows access but does not replace the authorisation checks. The data holder still
+checks consent at Mitz for this patient, requester and professional. See [Consent](#consent).
+
+- The data user **MUST** request a separate access token for every patient.
+- The data user **MUST** include a `NutsBSNCredential` with the patient's BSN in the access-token
+  request.
+
+#### Data Request
+
+**Requesting parties are IP-whitelisted at the FHIR endpoint.** HINQ keeps a whitelist with the IP
+addresses of the data users it has explicitly admitted to the pilot. The data holder rejects a
+request to the FHIR endpoint when it comes from an IP address that is not on this whitelist. This
+applies regardless of the access token or credentials the requester presents.
+
+The access rules below govern the **data request** itself. The data holder evaluates them in its
+policy decision point, or PDP. This specification does not prescribe how the PDP implements the
+rules. It only requires that the PDP applies exactly these rules.
+
+Zorginzage expresses its access rules as a shared policy in the Rego language. That way many
+independent data holders apply exactly the same ruleset. This pilot has a single data holder, so
+there is no shared Rego policy. The rules in this section are the normative ruleset instead. If more
+data holders join the use case later, a shared Rego policy can be added at that point.
+
+The access rules are:
+
+- Presence of the required fields for consent check **MUST** be checked. See [Consent](#consent).
+- Patient context is mandatory. The access token **MUST** be bound to a patient. The PDP takes the
+  patient's BSN from the token, not from the request.
+- The requested data **MUST** belong to the patient the access token is bound to.
+- Explicit patient consent **MUST** be checked before returning data. See [Consent](#consent).
+
+#### Consent
 
 Consent verification is part of the authorisation decision. The data holder checks that a valid
-explicit consent for the requested exchange is present before releasing data. The check is performed
-by the data holder (the source system), wherever the patient's consent is stored — locally, at an
-OTV such as Mitz, or in another consent registry; the storage location does not matter for this
-specification.
+explicit consent for the requested exchange is present before releasing data. The data holder
+performs this check at Mitz. Mitz is the national online toestemmingsvoorziening, or OTV, where
+patients record their consent.
 
-Conformance:
+The data holder performs the Mitz "gesloten vraag", which means closed question. It asks Mitz
+whether consent exists for this specific requester, data holder and patient. The request to Mitz
+contains the following fields:
 
-- The data holder **MUST** check the presence of a valid explicit patient consent for the requested
-  exchange before returning data.
-- The data holder **MAY** check consent in a local system, at an online toestemmingsvoorziening
-  (OTV, e.g. Mitz), or in another consent registry.
+| Mitz field | Value | Source |
+|------------|-------|--------|
+| `PatientBSN` | The BSN of the patient | The `NutsBSNCredential` in the access token |
+| `ProviderInstitutionID` | The URA of the requesting organisation | The URA credential or the `X509Credential` |
+| `ConsultingFacilityType` | The Zorgaanbiedertype of the requesting organisation | The Zorgaanbiedertype credential |
+| `SubjectRole` | The role code of the healthcare professional | The `NutsEmployeeCredential` |
+| `ProviderID` | The identifier of the healthcare professional | The `NutsEmployeeCredential` |
+| `AuthorInstitutionID` | The URA of the data holder organisation | Configured at the data holder |
+| `HealthcareFacilityType` | The Zorgaanbiedertype of the data holder organisation | Configured at the data holder |
+| `EventCode` | `GGC002`. This is the fixed code for the gesloten vraag. | Fixed value |
+| `PurposeOfUse` | `TREAT` | Fixed value |
 
-Attributes available for the consent check include: URA of the data user, Zorgaanbiedertype of the
-data user, BSN of the patient, and the use-case identifier (`ion_inzage`). The URA, AGB and Zorgaanbiedertype
-credentials needed for these checks are issued by HINQ (see
-[Authentication](#authentication-organisation-identity)).
+The URA comes from the `X509Credential` when the requesting organisation presents one. Otherwise it
+comes from the HINQ-issued URA credential. See [Healthcare Organisation](#healthcare-organisation).
+The AGB credential is not used for the consent check.
 
-### Network security
+#### Conformance
 
-In production and acceptance environments, vendor organisations **MUST** use server- and
-client-authentication (mutual TLS) based on PKIoverheid certificates. In test environments,
-PKIoverheid certificates or public-trust certificates **MUST** be used.
+The data holder organisation:
 
-The national specifications for network security ("Veilig Netwerk") are not yet finalised; the
-current concept version prescribes PKIoverheid certificates, which are already widely in use by
+- **MUST** reject a request to the FHIR endpoint when it comes from an IP address that is not on
+  the requestor whitelist.
+- **MUST** enforce the access rules described in [At the data request](#data-request).
+- **MUST** check the presence of a valid explicit patient consent for the requested exchange before
+  returning data.
+- **MUST** perform this consent check at Mitz.
+- **MUST** only return data of the patient the access token is bound to.
+
+### Network Security
+
+In production and acceptance environments, vendor organisations **MUST** use mutual TLS based on
+PKIoverheid certificates. Mutual TLS means that both the server and the client authenticate. In test
+environments, PKIoverheid certificates or public-trust certificates **MUST** be used.
+
+The national specifications for network security, called "Veilig Netwerk", are not yet finalised.
+The current concept version prescribes PKIoverheid certificates. These are already widely in use by
 vendors.
