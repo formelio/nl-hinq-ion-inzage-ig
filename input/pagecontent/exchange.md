@@ -28,9 +28,9 @@ A data exchange consists of the following steps:
 
 1. **Access token request.** The data user requests an access token for one specific patient. It
    authenticates at organization and person level and supplies the patient's BSN in a
-   `NutsBSNCredential`. The token is bound to that patient. See
+   `NutsBsnCredential`. The token is bound to that patient. See
    [Identification and Authentication](#identification-and-authentication) and
-   [NutsBSNCredential](#nutsbsncredential).
+   [NutsBsnCredential](#nutsbsncredential).
 2. **Patient search.** The data user searches the patient on BSN at the data holder to obtain the
    patient's technical identifier.
 3. **Data request.** The data user requests data using that patient's technical identifier.
@@ -127,9 +127,10 @@ user does this by including a `NutsEmployeeCredential` in the access-token reque
 
 The `NutsEmployeeCredential` is **self-attested** by the data user's system. This is in line with the
 Zorginzage authentication approach in Nuts v6. The data user's application authenticates the
-professional in its own user session. It fills the credential fields from that session. These fields
-are the name, the role and the identifier. The data user's system **MUST** supply these fields. This lets the data holder meet its NEN 7513 audit logging
-obligations. The approach works today, independent of national initiatives such as Dezi that are not
+professional in its own user session. It fills the credential fields from that session. The data
+user's system **MUST** supply all fields. This lets the data holder meet its NEN 7513 audit logging
+obligations. The fields are listed in
+[NutsEmployeeCredential](credentials.html#nutsemployeecredential). The approach works today, independent of national initiatives such as Dezi that are not
 yet in place.
 
 ##### Implementation
@@ -141,10 +142,9 @@ identity means, described in
 hosted a web page for the professional to confirm their details. Under the self-attested model the
 data user is trusted to have authenticated the professional and checked the supplied fields.
 
-The data user passes the employee fields directly in the `request-service-access-token` call. Its
-Nuts node includes the credential in the Verifiable Presentation. The data holder's PDP gets the
-fields back when it introspects the token. The application therefore does
-**not** need to render an HTML page from its Nuts node to obtain the token. The exact
+The data user passes the credential directly in the `request-service-access-token` call. See
+[Self-Attested Credentials](credentials.html#self-attested-credentials). The application therefore
+does **not** need to render an HTML page from its Nuts node to obtain the token. The exact
 request/response shape and API details are in the Nuts node
 [auth v2 API documentation](https://nuts-node.readthedocs.io/en/stable/pages/integrating/api.html)
 and on the [Requesting Access](https://wiki.nuts.nl/books/implementing-a-nuts-use-case/page/requesting-access-outbound)
@@ -166,7 +166,7 @@ Access is gated in two places: at the token request and at the data request.
 #### Token Request
 
 The data user requests the access token from its own Nuts node. The access-token request contains
-the organization credentials, a `NutsEmployeeCredential` and a `NutsBSNCredential`. Together they
+the organization credentials, a `NutsEmployeeCredential` and a `NutsBsnCredential`. Together they
 identify the requesting organization, the healthcare professional and the patient.
 
 ##### Organization Credentials
@@ -179,20 +179,20 @@ describes the presentation definition and how it is loaded into the data holder'
 
 ##### NutsEmployeeCredential
 
-This credential federates the identity of the healthcare professional to the data holder. The data 
-user's system self-attests it. [Healthcare Professional](#healthcare-professional) describes the 
-credential fields and how the data user fills them.
+This credential federates the identity of the healthcare professional to the data holder. The data
+user's system self-attests it. [Healthcare Professional](#healthcare-professional) describes why it
+is needed and how the data user fills it.
 
 When the PDP introspects the token, it gets the professional's identifier and role back. The PDP uses
 them for the consent check. See [Consent](#consent).
 
 - The access-token request **MUST** include a `NutsEmployeeCredential`.
 
-##### NutsBSNCredential
+##### NutsBsnCredential
 
 Every access token in this use case is bound to a single patient. The data user binds the token by
-including a `NutsBSNCredential` in the access-token request. This credential carries the patient's
-BSN. It works the same way as the [`NutsEmployeeCredential`](#healthcare-professional).
+including a `NutsBsnCredential` in the access-token request. This credential carries the patient's
+BSN. Its fields are listed in [NutsBsnCredential](credentials.html#nutsbsncredential).
 
 When the PDP introspects the token at the data holder's Nuts node, it gets the BSN back. The PDP uses
 it for the consent check and passes it on with the request.
@@ -211,12 +211,12 @@ use case binds every token to one patient for the following reasons:
   PDP does not read request bodies. The token gives the PDP the BSN for every request, including the
   patient search.
 
-The `NutsBSNCredential` is self-attested. The data holder trusts the data user to provide the correct
+The `NutsBsnCredential` is self-attested. The data holder trusts the data user to provide the correct
 BSN. The data holder still checks consent for this patient, data user and professional. See
 [Consent](#consent).
 
 - The data user **MUST** request a separate access token for every patient.
-- The data user **MUST** include a `NutsBSNCredential` with the patient's BSN in the access-token
+- The data user **MUST** include a `NutsBsnCredential` with the patient's BSN in the access-token
   request.
 
 #### Data Request
@@ -245,7 +245,7 @@ of this information.
 
 | Information | Source |
 |-------------|--------|
-| The BSN of the patient | The `NutsBSNCredential` |
+| The BSN of the patient | The `NutsBsnCredential` |
 | The URA of the requesting organization | The URA credential or the `X509Credential` |
 | The Zorgaanbiedertype of the requesting organization | The Zorgaanbiedertype credential |
 | The role code of the healthcare professional | The `NutsEmployeeCredential` |
@@ -261,7 +261,7 @@ The data user:
 
 - **MUST** include a `NutsEmployeeCredential` in the access-token request.
 - **MUST** request a separate access token for every patient.
-- **MUST** include a `NutsBSNCredential` with the patient's BSN in the access-token request.
+- **MUST** include a `NutsBsnCredential` with the patient's BSN in the access-token request.
 - **MUST** provide all information listed in [Consent](#consent).
 
 ### Network Security
