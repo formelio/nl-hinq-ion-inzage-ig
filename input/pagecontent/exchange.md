@@ -166,16 +166,30 @@ Access is gated in two places: at the token request and at the data request.
 #### Token Request
 
 The data user requests the access token from its own Nuts node. The access-token request contains
-the organization credentials, a `NutsEmployeeCredential` and a `NutsBsnCredential`. Together they
+the organization credentials, a `NutsEmployeeCredential` and a `HinqBsnCredential`. Together they
 identify the requesting organization, the healthcare professional and the patient.
+
+A *presentation definition* bound to the `ion_inzage` scope demands these credentials. The data
+holder's authorization server publishes this presentation definition. The data user's Nuts node
+fetches it and builds a Verifiable Presentation that satisfies it. Only then is a token issued. The
+presentation definition requires:
+
+- The organization identity, from either an `X509Credential` or the URA Credential and the AGB
+  Credential. If the data user holds both, its Nuts node presents the `X509Credential`.
+- The Zorgaanbiedertype Credential.
+- The `NutsEmployeeCredential`.
+- The `HinqBsnCredential`.
+
+The presentation definition is published as a Nuts policy file in the
+[`policy/`](https://github.com/formelio/nl-hinq-ion-inzage-ig/tree/main/policy) directory of this
+repository. The data holder loads it into its Nuts node.
 
 ##### Organization Credentials
 
-The data user must present the [required credentials](#required-credentials). A *presentation
-definition* bound to the `ion_inzage` scope demands these credentials. The data holder's
-authorization server publishes this presentation definition. The data user's Nuts node fetches it and
-builds a Verifiable Presentation that satisfies it. Only then is a token issued. [Policy](policy.html)
-describes the presentation definition and how it is loaded into the data holder's Nuts node.
+The data user must present the [required credentials](#required-credentials). Their fields are
+described in [Credentials & Issuance](credentials.html#credential-specifications). When the PDP
+introspects the token, it gets the URA, the AGB and the Zorgaanbiedertype back. The PDP uses the URA
+and the Zorgaanbiedertype for the consent check. See [Consent](#consent).
 
 ##### NutsEmployeeCredential
 
