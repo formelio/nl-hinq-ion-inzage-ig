@@ -28,9 +28,9 @@ A data exchange consists of the following steps:
 
 1. **Access token request.** The data user requests an access token for one specific patient. It
    authenticates at organization and person level and supplies the patient's BSN in a
-   `NutsBsnCredential`. The token is bound to that patient. See
+   `HinqBsnCredential`. The token is bound to that patient. See
    [Identification and Authentication](#identification-and-authentication) and
-   [NutsBsnCredential](#nutsbsncredential).
+   [HinqBsnCredential](#hinqbsncredential).
 2. **Patient search.** The data user searches the patient on BSN at the data holder to obtain the
    patient's technical identifier.
 3. **Data request.** The data user requests data using that patient's technical identifier.
@@ -202,11 +202,11 @@ them for the consent check. See [Consent](#consent).
 
 - The access-token request **MUST** include a `NutsEmployeeCredential`.
 
-##### NutsBsnCredential
+##### HinqBsnCredential
 
 Every access token in this use case is bound to a single patient. The data user binds the token by
-including a `NutsBsnCredential` in the access-token request. This credential carries the patient's
-BSN. Its fields are listed in [NutsBsnCredential](credentials.html#nutsbsncredential).
+including a `HinqBsnCredential` in the access-token request. This credential carries the patient's
+BSN. Its fields are listed in [HinqBsnCredential](credentials.html#hinqbsncredential).
 
 When the PDP introspects the token at the data holder's Nuts node, it gets the BSN back. The PDP uses
 it for the consent check and passes it on with the request.
@@ -225,12 +225,12 @@ use case binds every token to one patient for the following reasons:
   PDP does not read request bodies. The token gives the PDP the BSN for every request, including the
   patient search.
 
-The `NutsBsnCredential` is self-attested. The data holder trusts the data user to provide the correct
+The `HinqBsnCredential` is self-attested. The data holder trusts the data user to provide the correct
 BSN. The data holder still checks consent for this patient, data user and professional. See
 [Consent](#consent).
 
 - The data user **MUST** request a separate access token for every patient.
-- The data user **MUST** include a `NutsBsnCredential` with the patient's BSN in the access-token
+- The data user **MUST** include a `HinqBsnCredential` with the patient's BSN in the access-token
   request.
 
 #### Data Request
@@ -259,7 +259,7 @@ of this information.
 
 | Information | Source |
 |-------------|--------|
-| The BSN of the patient | The `NutsBsnCredential` |
+| The BSN of the patient | The `HinqBsnCredential` |
 | The URA of the requesting organization | The URA credential or the `X509Credential` |
 | The Zorgaanbiedertype of the requesting organization | The Zorgaanbiedertype credential |
 | The role code of the healthcare professional | The `NutsEmployeeCredential` |
@@ -275,7 +275,7 @@ The data user:
 
 - **MUST** include a `NutsEmployeeCredential` in the access-token request.
 - **MUST** request a separate access token for every patient.
-- **MUST** include a `NutsBsnCredential` with the patient's BSN in the access-token request.
+- **MUST** include a `HinqBsnCredential` with the patient's BSN in the access-token request.
 - **MUST** provide all information listed in [Consent](#consent).
 
 ### Network Security
