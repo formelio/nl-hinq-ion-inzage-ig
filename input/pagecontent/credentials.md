@@ -242,10 +242,17 @@ The `HinqUraCredential`, `HinqAgbCredential`, `HinqHealthcareProviderRoleTypeCre
 `HinqBsnCredential` are custom credential types. The standard Nuts JSON-LD context does not define
 them. HINQ publishes a JSON-LD context that defines these types and their fields.
 
+The context file is
+[`hinq-credentials-v1.jsonld`](https://github.com/formelio/nl-hinq-ion-inzage-ig/blob/main/jsonld/hinq-credentials-v1.jsonld)
+in the `jsonld/` directory of this repository. HINQ will also publish it at its context URL.
+The URL is not determined yet. The file and the examples use the placeholder
+`https://example.hinq.nl/credentials/v1`.
+
 **Why it is needed.** The credentials are JSON-LD credentials with a `JsonWebSignature2020` proof.
-This signature is not computed over the raw JSON. The Nuts node first expands the credential through
-its JSON-LD contexts into a canonical form and signs that form. A node that does not know the context
-cannot build the canonical form. It therefore cannot store, present or verify the credential.
+This signature is not computed over the raw JSON. The Nuts node uses the JSON-LD contexts to turn the
+credential into a normalized list of statements. The signature is computed over that list. A node that
+does not know the context cannot build the list. It therefore cannot store, present or verify the
+credential.
 
 The Nuts nodes of the data user and the data holder **MUST** load the HINQ context:
 
@@ -255,8 +262,9 @@ The Nuts nodes of the data user and the data holder **MUST** load the HINQ conte
 **How it is configured.** A Nuts node runs in strict mode by default. It only uses JSON-LD contexts it
 is configured for. There are two configuration options under `jsonld.contexts`:
 
-- `localmapping` maps the context URL to a local copy of the context file. This pins the version of
-  the context and removes the dependency on HINQ's server at runtime.
+- `localmapping` maps the context URL to a local copy of the context file, such as the file in this
+  repository. This pins the version of the context and removes the dependency on HINQ's server at
+  runtime.
 - `remoteallowlist` allows the node to fetch the context from its URL. The node fetches the context at
   startup. When the context changes, the node must be restarted.
 
