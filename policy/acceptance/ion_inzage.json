@@ -1,0 +1,337 @@
+{
+  "ion_inzage": {
+    "organization": {
+      "format": {
+        "ldp_vc": {
+          "proof_type": [
+            "JsonWebSignature2020"
+          ]
+        },
+        "jwt_vc": {
+          "alg": [
+            "PS256"
+          ]
+        },
+        "jwt_vp": {
+          "alg": [
+            "ES256"
+          ]
+        }
+      },
+      "id": "pd_ion_inzage_organization",
+      "name": "HINQ ION Inzage requesting organization",
+      "purpose": "Authenticating the care organization, the healthcare professional and the patient for the ion_inzage use case",
+      "submission_requirements": [
+        {
+          "name": "Organization identity",
+          "purpose": "The organization proves its URA either with an X509Credential or with the HINQ-issued URA and AGB credentials",
+          "rule": "pick",
+          "count": 1,
+          "from_nested": [
+            {
+              "name": "UZI server certificate",
+              "rule": "all",
+              "from": "uzi"
+            },
+            {
+              "name": "HINQ-issued identity credentials",
+              "rule": "all",
+              "from": "hinq_identity"
+            }
+          ]
+        },
+        {
+          "name": "Always required",
+          "purpose": "The organization type, the healthcare professional and the patient",
+          "rule": "all",
+          "from": "required"
+        }
+      ],
+      "input_descriptors": [
+        {
+          "id": "id_uzicert_uracredential",
+          "name": "Care organization identity from CIBG-issued UZI-server certificate",
+          "purpose": "Finding a care organization for authorizing access to HINQ ION data",
+          "group": [
+            "uzi"
+          ],
+          "constraints": {
+            "fields": [
+              {
+                "path": [
+                  "$.type"
+                ],
+                "filter": {
+                  "type": "string",
+                  "const": "X509Credential"
+                }
+              },
+              {
+                "path": [
+                  "$.issuer"
+                ],
+                "purpose": "We can only accept credentials from a trusted issuer",
+                "filter": {
+                  "type": "string",
+                  "pattern": "^did:x509:0:sha256:(GwlhBZuEFlSHXSRUXQuTs3_YpQxAahColwJJj35US1A|vdhg746H4rLH67NN1unhdxo6PF3shQunCA4-KQTb2Jc|svKzNxhS07V1dKkekWOZV0d6Ao7_qvjqXegWB32YjZE|sDTL__yv54TtrvSf7601TtvHgj2NZSLT2m-Okf8oqkI)[\\w\\-.:%]*$"
+                }
+              },
+              {
+                "id": "organization_id",
+                "path": [
+                  "$.credentialSubject[0].id",
+                  "$.credentialSubject.id"
+                ],
+                "filter": {
+                  "type": "string",
+                  "pattern": "^did:web:"
+                }
+              },
+              {
+                "id": "organization_name",
+                "path": [
+                  "$.credentialSubject[0].subject.O",
+                  "$.credentialSubject.subject.O"
+                ],
+                "filter": {
+                  "type": "string"
+                }
+              },
+              {
+                "id": "organization_ura",
+                "path": [
+                  "$.credentialSubject[0].san.otherName",
+                  "$.credentialSubject.san.otherName"
+                ],
+                "filter": {
+                  "type": "string",
+                  "pattern": "^[0-9.]+-\\d+-\\d+-S-(\\d+)-00\\.000-\\d+$"
+                }
+              },
+              {
+                "id": "organization_city",
+                "path": [
+                  "$.credentialSubject[0].subject.L",
+                  "$.credentialSubject.subject.L"
+                ],
+                "filter": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "id_hinq_ura_credential",
+          "name": "Care organization URA from the HINQ-issued HinqUraCredential",
+          "purpose": "Finding a care organization for authorizing access to HINQ ION data",
+          "group": [
+            "hinq_identity"
+          ],
+          "constraints": {
+            "fields": [
+              {
+                "path": [
+                  "$.type"
+                ],
+                "filter": {
+                  "type": "string",
+                  "const": "HinqUraCredential"
+                }
+              },
+              {
+                "path": [
+                  "$.issuer"
+                ],
+                "purpose": "We can only accept credentials from a trusted issuer",
+                "filter": {
+                  "type": "string",
+                  "const": "did:web:example.hinq.nl"
+                }
+              },
+              {
+                "id": "organization_id",
+                "path": [
+                  "$.credentialSubject.id"
+                ],
+                "filter": {
+                  "type": "string",
+                  "pattern": "^did:web:"
+                }
+              },
+              {
+                "id": "organization_ura",
+                "path": [
+                  "$.credentialSubject.organization.ura"
+                ],
+                "filter": {
+                  "type": "string",
+                  "pattern": "^\\d{8}$"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "id_hinq_agb_credential",
+          "name": "Care organization AGB from the HINQ-issued HinqAgbCredential",
+          "purpose": "Confirming that the care organization exists",
+          "group": [
+            "hinq_identity"
+          ],
+          "constraints": {
+            "fields": [
+              {
+                "path": [
+                  "$.type"
+                ],
+                "filter": {
+                  "type": "string",
+                  "const": "HinqAgbCredential"
+                }
+              },
+              {
+                "path": [
+                  "$.issuer"
+                ],
+                "purpose": "We can only accept credentials from a trusted issuer",
+                "filter": {
+                  "type": "string",
+                  "const": "did:web:example.hinq.nl"
+                }
+              },
+              {
+                "id": "organization_agb",
+                "path": [
+                  "$.credentialSubject.organization.agb"
+                ],
+                "filter": {
+                  "type": "string",
+                  "pattern": "^\\d{8}$"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "id_hinq_healthcare_provider_role_type_credential",
+          "name": "Care organization type from the HINQ-issued HinqHealthcareProviderRoleTypeCredential",
+          "purpose": "Determining the organization type for the consent check",
+          "group": [
+            "required"
+          ],
+          "constraints": {
+            "fields": [
+              {
+                "path": [
+                  "$.type"
+                ],
+                "filter": {
+                  "type": "string",
+                  "const": "HinqHealthcareProviderRoleTypeCredential"
+                }
+              },
+              {
+                "path": [
+                  "$.issuer"
+                ],
+                "purpose": "We can only accept credentials from a trusted issuer",
+                "filter": {
+                  "type": "string",
+                  "const": "did:web:example.hinq.nl"
+                }
+              },
+              {
+                "id": "organization_role_code_nl",
+                "path": [
+                  "$.credentialSubject.roleCodeNL"
+                ],
+                "filter": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "id_employee",
+          "name": "The user identity based on the self issued NutsEmployeeCredential",
+          "group": [
+            "required"
+          ],
+          "constraints": {
+            "fields": [
+              {
+                "path": [
+                  "$.type"
+                ],
+                "filter": {
+                  "type": "string",
+                  "const": "NutsEmployeeCredential"
+                }
+              },
+              {
+                "id": "employee_name",
+                "path": [
+                  "$.credentialSubject.name"
+                ],
+                "filter": {
+                  "type": "string"
+                }
+              },
+              {
+                "id": "employee_role",
+                "path": [
+                  "$.credentialSubject.roleName"
+                ],
+                "filter": {
+                  "type": "string"
+                }
+              },
+              {
+                "id": "employee_identifier",
+                "path": [
+                  "$.credentialSubject.identifier"
+                ],
+                "filter": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "id_patient_bsn",
+          "name": "The patient the access token is bound to, based on the self issued HinqBsnCredential",
+          "group": [
+            "required"
+          ],
+          "constraints": {
+            "fields": [
+              {
+                "path": [
+                  "$.type"
+                ],
+                "filter": {
+                  "type": "string",
+                  "const": "HinqBsnCredential"
+                }
+              },
+              {
+                "id": "patient_bsn",
+                "path": [
+                  "$.credentialSubject.bsn"
+                ],
+                "filter": {
+                  "type": "string",
+                  "pattern": "^\\d{9}$"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "scope_policy": "profile-only"
+  }
+}
