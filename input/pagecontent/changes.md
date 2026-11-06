@@ -23,6 +23,13 @@ Significant changes:
 - **CapabilityStatement completed.** The CapabilityStatement lists every allowed request of the
   dataset, with the required and optional search parameters. Other search parameters are not
   allowed. The `subject` parameter is no longer accepted as an alternative to `patient`.
+- **Paging and errors.** The data holder may return paged results with `next` links. The Errors
+  section adds `429`, `502`, `503` and `504`, with retry guidance. A request for a resource type that
+  the CapabilityStatement does not list returns `400`.
+- **Medication agreements.** The data element "Current medication" is renamed to "Medication
+  agreements", because the request returns current and past agreements.
+- **Treatment relationship.** The data user is responsible for only requesting data for patients
+  with whom the professional has a treatment relationship.
 - **Consent information.** The professional's role is no longer part of the consent check. It is
   recorded for audit logging.
 

@@ -25,7 +25,7 @@ nl-core profiles.
 | Huisartsenpraktijk | Zorgaanbieder | `Organization` | `nl-core-organization` |
 | Episodes | ZorgEpisode | `EpisodeOfCare` | `nl-core-episodeofcare` |
 | Attention flags | Alert | `Flag` | `zib-Alert` |
-| Current medication | MedicatieAfspraak | `MedicationRequest` | `zib-MedicationAgreement` |
+| Medication agreements | MedicatieAfspraak | `MedicationRequest` | `zib-MedicationAgreement` |
 | Medication allergies | AllergieIntolerantie | `AllergyIntolerance` | `zib-AllergyIntolerance` |
 | Measurements | Bloeddruk, Lichaamsgewicht, Lichaamslengte, Lichaamstemperatuur, Hartfrequentie, Polsfrequentie, O2Saturatie | `Observation` | `zib-BloodPressure`, `zib-BodyWeight`, `zib-BodyHeight`, `zib-BodyTemperature`, `zib-HeartRate`, `zib-PulseRate`, `zib-O2Saturation` |
 | Diagnostic and laboratory results | LaboratoriumUitslag | `Observation` | `gp-DiagnosticResult`, `gp-LaboratoryResult` |
@@ -52,7 +52,7 @@ allowed.
 | Huisarts and huisartsenpraktijk | Add `_include=Patient:general-practitioner` to the patient search |
 | Episodes | `GET {fhir_base}/EpisodeOfCare?patient={id}` |
 | Attention flags | `GET {fhir_base}/Flag?patient={id}` |
-| Current medication | `GET {fhir_base}/MedicationRequest?patient={id}&_include=MedicationRequest:medication` |
+| Medication agreements | `GET {fhir_base}/MedicationRequest?patient={id}&_include=MedicationRequest:medication` |
 | Medication allergies | `GET {fhir_base}/AllergyIntolerance?patient={id}` |
 | Measurements and results | `GET {fhir_base}/Observation?patient={id}` |
 | SOEP reports | `GET {fhir_base}/Composition?patient={id}` |
@@ -70,10 +70,12 @@ Content-Type: application/x-www-form-urlencoded
 identifier=http://fhir.nl/fhir/NamingSystem/bsn|{bsn}&_include=Patient:general-practitioner
 ```
 
-#### Current Medication
+#### Medication Agreements
 
-The response contains the medication agreements. With `_include=MedicationRequest:medication`, it
-also contains the `Medication` resources that the agreements reference.
+The response contains all medication agreements of the patient, current and past. Selecting the
+current medication is up to the data user, for example by the period of use. With
+`_include=MedicationRequest:medication`, the response also contains the `Medication` resources that
+the agreements reference.
 
 #### Measurements and Results
 
@@ -86,8 +88,9 @@ user can tell them apart by `Observation.code`. It **MAY** narrow the request wi
 A SOEP report is a `Composition`. Its lines are `Observation` resources that the `Composition`
 references.
 
-A SOEP report has four lines: S (Subjectief), O (Objectief), E (Evaluatie) and P (Plan). The E line
-holds the conclusion of the consult. The P line holds the agreed actions and any next steps.
+A SOEP report has four lines: S for Subjectief, O for Objectief, E for Evaluatie and P for Plan.
+The E line holds the conclusion of the consult. The P line holds the agreed actions and any next
+steps.
 
 The data holder **MUST** only return the E and P lines. It **MUST NOT** return the S and O lines.
 This follows the MedMij information standard Huisartsgegevens 2.0.

@@ -123,7 +123,8 @@ and match check. It confirms that the care provider exists and corresponds to th
 #### Zorgaanbiedertype Credential
 
 The Zorgaanbiedertype Credential expresses which type of healthcare organization the data user is.
-The data holder needs it for the consent check. It is also used for role and ZIB filtering.
+The data holder needs it for the consent check. Filtering the data by organization type is future
+work. It is not defined in this version, so every organization type gets the same dataset.
 
 | Field | Value |
 |-------|-------|
@@ -265,8 +266,14 @@ is configured for. There are two configuration options under `jsonld.contexts`:
 - `localmapping` maps the context URL to a local copy of the context file, such as the file in this
   repository. This pins the version of the context and removes the dependency on HINQ's server at
   runtime.
-- `remoteallowlist` allows the node to fetch the context from its URL. The node fetches the context at
-  startup. When the context changes, the node must be restarted.
+- `remoteallowlist` allows the node to fetch the context from its URL. The node fetches the context
+  the first time it needs it and keeps it in memory until it restarts. When the context changes, the
+  node must be restarted.
+
+A file in `localmapping` is loaded at startup. The node does not start when the file is missing.
+Until HINQ publishes the context at its URL, `localmapping` is the only option that works. The
+configuration of both options is shown in
+[Step 1](integration.html#step-1-configure-the-nuts-node).
 
 Setting either list replaces its default entries. The default entries **MUST** therefore be repeated
 in the configuration. Otherwise the node can no longer process other credentials. The defaults are
@@ -322,7 +329,10 @@ Credentials are **rechecked and re-issued every year**. HINQ re-runs the checks 
 [Requesting Credentials](#requesting-credentials) before it issues a fresh credential. Expiry and
 re-issuance are deliberately aligned. The yearly renewal also confirms that the organization still
 exists in its current form. The data user loads the new credentials into its Nuts node before the old
-ones expire.
+ones expire. It then deletes the old credentials from its wallet with the
+`DELETE /internal/vcr/v2/holder/{subjectID}/vc/{id}` API. When the wallet holds two matching
+credentials of the same type, the Nuts node presents the first one it finds, which can be the old
+one.
 
 #### Changes and Revocation
 

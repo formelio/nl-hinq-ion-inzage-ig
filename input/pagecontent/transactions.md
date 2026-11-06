@@ -34,8 +34,8 @@ The interaction has four steps:
 
 The access token is a DPoP token. Before every FHIR request, the data user creates a
 [DPoP Proof](#dpop-proof). At every FHIR request, the PDP checks the token through
-[Token Introspection](#token-introspection) and validates the proof. [Errors](#errors) lists the responses when a request is
-rejected.
+[Token Introspection](#token-introspection) and validates the proof. [Errors](#errors) lists the
+responses when a request is rejected.
 
 ### Access Token Request
 
@@ -276,7 +276,9 @@ Content-Type: application/fhir+json
 }
 ```
 
-When no patient matches, the response is `200 OK` with an empty Bundle.
+The PDP checks consent before the search is executed. A patient without consent gets a `403`,
+whether or not the patient is known to the data holder. When the patient has consent but no patient
+matches, the response is `200 OK` with an empty Bundle.
 
 The data user can add `_include=Patient:general-practitioner` to also retrieve the huisarts and
 the huisartsenpraktijk. See [Patient](dataset.html#patient) in the Dataset.
@@ -356,6 +358,28 @@ Content-Type: application/fhir+json
 }
 ```
 
+### Paging
+
+The data holder **MAY** return the results of a search in pages. A page is a Bundle with a link with
+relation `next`:
+
+```json
+"link": [
+  { "relation": "self", "url": "{fhir_base}/Observation?patient=patient-123" },
+  { "relation": "next", "url": "{fhir_base}/Observation?patient=patient-123&<paging parameters>" }
+]
+```
+
+**Rules**
+
+- The data user **MUST** follow a `next` link to get all results. It **MUST** use the URL unchanged.
+- The data user **MUST** create a new DPoP proof for each page. The `htu` is the URL of the `next`
+  link without query parameters.
+- The paging parameters in a `next` link are set by the data holder. They are allowed, although the
+  CapabilityStatement does not list them. A data user **MUST NOT** add them itself.
+- When the access token expires while paging, the data user requests a new token and continues with
+  the `next` link.
+
 ### Errors
 
 **Access token request.** When the data user's wallet does not hold credentials that match the
@@ -368,9 +392,18 @@ following status codes:
 
 | Status | When |
 |--------|------|
-| `400 Bad Request` | The request does not follow the rules of the transaction. Examples are a GET-based patient search, a patient search that is not on BSN, a data request without a patient parameter, or a search parameter that the CapabilityStatement does not list. |
+| `400 Bad Request` | The request does not follow the rules of the transaction or the CapabilityStatement. Examples are a GET-based patient search, a patient search that is not on BSN, a data request without a patient parameter, and a resource type or search parameter that the CapabilityStatement does not list. |
 | `401 Unauthorized` | The access token is missing, invalid or expired. Introspection returns `"active": false`. The same applies when the DPoP proof is missing or invalid, or when the token is not a DPoP token. |
-| `403 Forbidden` | The access token is valid, but the request does not meet the access rules. Examples are a missing consent, a request for another patient than the token is bound to, or a request for an excluded resource type such as `List` or `Bundle`. |
+| `403 Forbidden` | The access token is valid, but the request does not meet the access rules. Examples are a missing consent and a request for another patient than the token is bound to. |
+| `429 Too Many Requests` | The data user sent too many requests. The `Retry-After` header says how many seconds to wait. HINQ sets the limits. |
+| `502 Bad Gateway` | A source system returned an invalid response. |
+| `503 Service Unavailable` | The HINQ ION service or the consent check is temporarily not available. |
+| `504 Gateway Timeout` | A source system did not respond in time. |
+
+A `400`, `401` or `403` is not resolved by repeating the same request. After a `401`, the data user
+requests a new access token or creates a new DPoP proof. A `429`, `502`, `503` or `504` is
+temporary. The data user **MAY** retry the request with a new DPoP proof after a delay. It **SHOULD**
+increase the delay with every retry.
 
 The response body is a FHIR `OperationOutcome`.
 
@@ -428,6 +461,25 @@ Content-Type: application/fhir+json
       "severity": "error",
       "code": "forbidden",
       "diagnostics": "Access denied"
+    }
+  ]
+}
+```
+
+For a `503`, the `OperationOutcome` has the code `transient`:
+
+```http
+HTTP/1.1 503 Service Unavailable
+Content-Type: application/fhir+json
+Retry-After: 30
+
+{
+  "resourceType": "OperationOutcome",
+  "issue": [
+    {
+      "severity": "error",
+      "code": "transient",
+      "diagnostics": "The service is temporarily not available"
     }
   ]
 }

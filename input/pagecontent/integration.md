@@ -14,8 +14,18 @@ The integration has six steps:
 5. [Configure mTLS for FHIR Requests](#step-5-configure-mtls-for-fhir-requests)
 6. [Test the Connection](#step-6-test-the-connection)
 
+### Environments
+
+HINQ provides two environments:
+
+| Environment | Purpose | Certificates |
+|-------------|---------|--------------|
+| Acceptance | Testing the integration before going live. Contains test patients. | PKIoverheid client certificates. An `X509Credential` from a production or test UZI CA is accepted. |
+| Production | Live use with real patient data. | PKIoverheid client certificates. An `X509Credential` from a production UZI CA is accepted. |
+
 Start in the acceptance environment. [Going to Production](#going-to-production) lists what changes
-for production.
+for production. Every environment needs its own subject and credentials. Credentials from one
+environment are not valid in the other.
 
 ### Prerequisites
 
@@ -25,6 +35,7 @@ for production.
 - A PKIoverheid client certificate for the data user application, issued under the G1 or the G4
   hierarchy. It is used for mTLS on the FHIR requests.
 - An application that authenticates healthcare professionals in its own user session.
+- `curl` and `jq`, to run the test requests in [Step 6](#step-6-test-the-connection).
 - Optional: a UZI server certificate, to use an `X509Credential` instead of the URA and AGB
   credentials.
 
@@ -85,8 +96,31 @@ jsonld:
 - **`url`** is the public HTTPS URL of your Nuts node. It becomes part of your organization's DID.
 - **`didmethods`** enables only `did:web`. The use case does not use `did:nuts`.
 - **`jsonld.contexts.remoteallowlist`** allows the node to fetch the HINQ JSON-LD context from its
-  URL. The URL is a placeholder. See [JSON-LD Context](credentials.html#json-ld-context) for why the
-  context is needed.
+  URL. See [JSON-LD Context](credentials.html#json-ld-context) for why the context is needed.
+
+**Alternative: a local copy of the context.** The context URL is a placeholder and is not published
+yet. Until it is, load the context from a local file with `localmapping` instead of
+`remoteallowlist`. Download
+[`hinq-credentials-v1.jsonld`](https://github.com/formelio/nl-hinq-ion-inzage-ig/blob/main/jsonld/hinq-credentials-v1.jsonld)
+and place it at the mapped path:
+
+```yaml
+jsonld:
+  contexts:
+    localmapping:
+      # Nuts defaults. Setting localmapping replaces them, so they are repeated here.
+      https://nuts.nl/credentials/2024: assets/contexts/nuts-2024.ldjson
+      https://nuts.nl/credentials/v1: assets/contexts/nuts.ldjson
+      https://schema.org: assets/contexts/schema-org-v13.ldjson
+      https://w3c-ccg.github.io/lds-jws2020/contexts/lds-jws2020-v1.json: assets/contexts/lds-jws2020-v1.ldjson
+      https://w3id.org/vc/status-list/2021/v1: assets/contexts/w3c-statuslist2021.ldjson
+      https://www.w3.org/2018/credentials/v1: assets/contexts/w3c-credentials-v1.ldjson
+      # HINQ context
+      https://example.hinq.nl/credentials/v1: /nuts/config/contexts/hinq-credentials-v1.jsonld
+```
+
+The node loads the local file at startup and fails to start when the file is missing. A local copy
+also pins the version of the context.
 
 The reverse proxy **MUST** forward the following paths of the public interface over HTTPS:
 
@@ -212,6 +246,15 @@ curl http://localhost:8081/internal/vcr/v2/holder/organization-a/vc
 The wallet **MUST** hold either the URA and AGB credentials or an `X509Credential`, and always the
 Zorgaanbiedertype credential.
 
+**Renewal.** HINQ re-issues the credentials every year. Load the new credentials, then delete the old
+ones. When the wallet holds two matching credentials of the same type, the Nuts node presents the
+first one it finds, which can be the old one. Delete a credential by its `id`, URL-encoded:
+
+```bash
+curl -X DELETE \
+  "http://localhost:8081/internal/vcr/v2/holder/organization-a/vc/$(jq -rn --arg id "<credential id>" '$id|@uri')"
+```
+
 ### Step 5: Configure mTLS for FHIR Requests
 
 The FHIR requests from your application to HINQ use mutual TLS:
@@ -222,6 +265,9 @@ The FHIR requests from your application to HINQ use mutual TLS:
   under the G1 hierarchy. Your application **MUST** trust the G1 root. Add
   `PrivateRootCA-G1.cer`, Staat der Nederlanden Private Root CA - G1, from
   [cert.pkioverheid.nl](http://cert.pkioverheid.nl/) to its truststore.
+
+HINQ only checks that your client certificate is issued under G1 or G4. You do not need to register
+the certificate with HINQ.
 
 The examples below use these files:
 
@@ -271,8 +317,8 @@ DPOP_KID=$(echo "$RESPONSE" | jq -r .dpop_kid)
 echo "$RESPONSE"
 ```
 
-**Expected:** a response with `"token_type": "DPoP"`, an `access_token` and a `dpop_kid`. The full response is shown in
-[Access Token Request](transactions.html#access-token-request).
+**Expected:** a response with `"token_type": "DPoP"`, an `access_token` and a `dpop_kid`. The full
+response is shown in [Access Token Request](transactions.html#access-token-request).
 
 The Nuts node caches access tokens. A request with the same body returns the cached token while it is
 valid. A request for another patient has a different body and gets a new token.
@@ -324,6 +370,10 @@ curl "$URL?patient=<patient id>" \
 **Expected:** `200 OK` with a Bundle of the patient's resources. See
 [Data Request](transactions.html#data-request).
 
+When the Bundle has a link with relation `next`, there are more results. Request that URL unchanged,
+with a new DPoP proof for its URL without query parameters. Repeat until the Bundle has no `next`
+link. See [Paging](transactions.html#paging).
+
 #### Check That Access Is Denied Without Consent
 
 Repeat [Request an Access Token](#request-an-access-token) with BSN `111222333`. Then repeat
@@ -344,7 +394,10 @@ The connection works when the first three requests succeed and the last one is d
 | Loading a credential returns `400` | The credential is invalid, or `credentialSubject.id` is not your DID. | Check that HINQ issued it to the DID of your subject. |
 | TLS handshake fails on a FHIR request | The client certificate is missing or not issued under G1 or G4, or the G1 root is not trusted. | See [Step 5](#step-5-configure-mtls-for-fhir-requests). |
 | FHIR request returns `401` | The access token is missing, invalid or expired, or the DPoP proof is missing or invalid. | Request a new access token. Create a new proof for every request, with the exact method and the URL without query parameters. Send the token with the `DPoP` scheme, not `Bearer`. |
+| FHIR request returns `400` | The request does not follow the CapabilityStatement, for example an unlisted resource type or search parameter. | Check the request against [Dataset](dataset.html#requests). |
 | FHIR request returns `403` | Access is denied, for example because the patient has no consent or the BSN differs from the token. | Check that the token was requested for the same BSN. |
+| FHIR request returns `429` | Too many requests. | Wait for the time in the `Retry-After` header. |
+| FHIR request returns `502`, `503` or `504` | A source system, the consent check or the HINQ ION service is not available. | Retry later. See [Errors](transactions.html#errors). |
 
 ### Going to Production
 

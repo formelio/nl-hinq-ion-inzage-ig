@@ -82,11 +82,12 @@ verifies, issues and maintains them.
 |------------|---------|------------------|
 | **URA Credential** | The primary organization identifier. | ZorgAB |
 | **AGB Credential** | An extra existence and match check. It confirms that the care provider exists and corresponds to the organization. | Vektis |
-| **Zorgaanbiedertype Credential** | Expresses which types of healthcare organization the data user is. Its technical name is `HinqHealthcareProviderRoleTypeCredential`. The data holder needs it for the consent check. It is also used for role and ZIB filtering. | Nictiz codelist |
+| **Zorgaanbiedertype Credential** | Expresses which types of healthcare organization the data user is. Its technical name is `HinqHealthcareProviderRoleTypeCredential`. The data holder needs it for the consent check. | OrganisatieTypeCodelijst |
 | **X509Credential** | A standard Nuts credential that represents the organization's UZI server certificate. The organization issues it to itself through a `did:x509` DID. It carries the URA from the certificate. HINQ does not issue it. | The UZI certificate chain |
 
 An organization that already has an `X509Credential` MAY present it instead of the URA Credential
-and the AGB Credential. The Zorgaanbiedertype Credential is always required. Support for the
+and the AGB Credential. The Zorgaanbiedertype Credential is always required. Filtering the data by
+organization type is future work and is not defined in this version. Support for the
 `X509Credential` was added in Nuts node v6.1.
 
 ##### Why HINQ Acts as Issuer
@@ -105,16 +106,17 @@ and local employee role are added as non-identifying attributes. The role is use
 logging, not for access decisions. All professionals have a local employee number. A national
 healthcare professional identifier and role are not yet available for all professionals.
 
-The healthcare professional's identity **MUST** be federated from the data user to the data holder. The data
-user does this by including a `NutsEmployeeCredential` in the access-token request. The request body is shown in [Access Token Request](transactions.html#access-token-request).
+The healthcare professional's identity **MUST** be federated from the data user to the data holder.
+The data user does this by including a `NutsEmployeeCredential` in the access-token request. The
+request body is shown in [Access Token Request](transactions.html#access-token-request).
 
 The `NutsEmployeeCredential` is **self-attested** by the data user's system. This is in line with the
 Zorginzage authentication approach in Nuts v6. The data user's application authenticates the
 professional in its own user session. It fills the credential fields from that session. The data
 user's system **MUST** supply all fields. This lets the data holder meet its NEN 7513 audit logging
 obligations. The fields are listed in
-[NutsEmployeeCredential](credentials.html#nutsemployeecredential). The approach works today, independent of national initiatives such as Dezi that are not
-yet in place.
+[NutsEmployeeCredential](credentials.html#nutsemployeecredential). The approach works today. It does
+not depend on national initiatives such as Dezi, which are not yet in place.
 
 ##### Implementation
 
@@ -264,7 +266,8 @@ The data holder **MUST** enforce the access rules described in [Data Request](#d
 
 The data holder **MUST** support the requests in the
 [CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html). The data user **MUST** only use
-those requests and their search parameters.
+those requests and their search parameters, and the `next` links of paged results. See
+[Paging](transactions.html#paging).
 
 The data user:
 
@@ -272,14 +275,17 @@ The data user:
 - **MUST** request a separate access token for every patient.
 - **MUST** include a `HinqBsnCredential` with the patient's BSN in the access-token request.
 - **MUST** provide all information listed in [Consent](#consent).
+- **MUST** only request data for a patient with whom the healthcare professional has a treatment
+  relationship. The data holder does not verify the treatment relationship. The data user remains
+  responsible for it.
 
 ### Network Security
 
-In production and acceptance environments, vendor organizations **MUST** use mutual TLS based on
+In the production and acceptance environments, vendor organizations **MUST** use mutual TLS based on
 PKIoverheid certificates for the FHIR requests. Mutual TLS means that both the server and the client
-authenticate. HINQ's FHIR endpoint has a PKIoverheid G1 server certificate. HINQ accepts client
-certificates issued under G1 or G4. In test environments, PKIoverheid certificates or public-trust
-certificates **MUST** be used.
+authenticate. HINQ's FHIR endpoint has a PKIoverheid G1 server certificate. HINQ accepts any client
+certificate issued under G1 or G4. The environments are described in
+[Environments](integration.html#environments).
 
 The traffic between the Nuts nodes does not need mutual TLS. The Nuts endpoints use server
 certificates from a publicly trusted CA.

@@ -1,28 +1,28 @@
 ### Overview
 
 This implementation guide describes the agreements and specifications for making **HINQ ION** data
-available to requesting parties in a generic, reusable way. It lets a data user retrieve, in a secure and auditable way, the data that the HINQ ION makes
-available on behalf of a source system. The data user is a care provider with a treatment
-relationship.
+available to requesting parties in a generic, reusable way. It lets a data user retrieve the data
+that HINQ ION makes available on behalf of a source system, in a secure and auditable way. The data
+user is a care provider with a treatment relationship with the patient.
 
 In this pilot stage the source system is **Medicom** and the data users are the **Rivo-Noord**
 region viewers. The longer-term ambition is for this guide to serve as a generic specification for
-exposing HINQ ION data to requesting parties, harmonized with the other generic Nuts specifications
-(Zorginzage and 360°-graden). It is largely derived from them.
+exposing HINQ ION data to requesting parties. It is harmonized with the other generic Nuts
+specifications, Zorginzage and 360°-graden, and is largely derived from them.
 
 ### Status and Scope
 
 This guide is a proposition for a production-grade pilot on a relatively small scale: a select set
-of organizations exchanging Medicom data with the Rivo-Noord viewers. It is a plan for what could be
-piloted now, as of June 2026. There is no commitment to use it, to bring it live, or to follow the
-Zorginzage governance, release schedule or planning. The architectural choices are made for what is
+of organizations exchanging Medicom data with the Rivo-Noord viewers. It is a plan for what can be
+piloted with the building blocks available today. There is no commitment to use it, to bring it
+live, or to follow the Zorginzage governance, release schedule or planning. The architectural choices are made for what is
 practical and usable for this pilot, which is why the guide is versioned below 1.0. The
 guiding principle is to reuse the building blocks that already exist.
 
-> Versioning rule. This specification is dimensioned for a small pilot. Several choices below are
-> deliberate pilot simplifications and are expected to change as the scope grows: addressing is out
-> of scope (endpoints are hardcoded rather than discovered), and organization credentials (URA, AGB)
-> are issued by HINQ rather than by a national authority. When the pilot grows beyond a handful of
+> **Versioning rule.** This specification is dimensioned for a small pilot. Several choices are
+> deliberate pilot simplifications and are expected to change as the scope grows. Addressing is out
+> of scope, so the endpoints are configured instead of discovered. The URA and AGB credentials are
+> issued by HINQ instead of a national authority. When the pilot grows beyond a handful of
 > organizations, or when a national URA issuer becomes available, a new version is created to adopt
 > it.
 
@@ -31,7 +31,7 @@ guiding principle is to reuse the building blocks that already exist.
 This guide reuses building blocks from the [Zorginzage 2026
 template](https://nuts-foundation.github.io/nl-zorginzage-ig/). The relevant content is copied into
 this guide so that the HINQ ION Inzage specification is self-contained and does not change when the
-Zorginzage specification evolves. Only the technical building blocks are taken over; the Zorginzage
+Zorginzage specification evolves. Only the technical building blocks are taken over. The Zorginzage
 governance, reciprocity, commitment, roadmap and release-policy chapters are out of scope. Where
 this pilot deviates from Zorginzage, the deviation is stated explicitly. The deviations are:
 
@@ -45,12 +45,6 @@ this pilot deviates from Zorginzage, the deviation is stated explicitly. The dev
 - **Patient-bound access tokens.** In Zorginzage, an access token is bound to one organization. In
   this specification, each token is also bound to one patient through the `HinqBsnCredential`. See
   [HinqBsnCredential](exchange.html#hinqbsncredential).
-
-### Release-Time-Based Components
-
-Some components name a preferred end-state option together with the pragmatic choice the pilot makes
-while the preferred option is not yet available. This lets the pilot start with available technology
-while staying ready to adopt the preferred generic functions as they mature.
 
 ### HINQ as Credential Issuer
 
@@ -83,15 +77,19 @@ Addressing is out of scope for this pilot. See [Addressing](exchange.html#addres
 
 ### Organization of This Guide
 
-- [Exchange Architecture](exchange.html): the technical agreements: exchange patterns,
-  identification, authentication, addressing, authorization, consent and network
-  security (in English).
-- [Credentials & Issuance](credentials.html): the organization credentials, how HINQ issues them,
-  and the validity/recheck/revocation flows (in English).
-- [Transactions](transactions.html): the sequence diagram of the interactions and example requests and responses (in English).
-- [Integration](integration.html): the steps a data user follows to connect, with the configuration
-  and test requests (in English).
-- [Dataset](dataset.html): the data exposed in this pilot (in English).
+- [Exchange Architecture](exchange.html): the technical agreements. These are the exchange pattern,
+  identification, authentication, addressing, access control, consent and network security.
+- [Credentials & Issuance](credentials.html): the credentials, how HINQ issues the organization
+  credentials, and their validity, renewal and revocation.
+- [Transactions](transactions.html): the sequence diagram of the interactions, and example requests
+  and responses for the access token, the DPoP proof, the patient search, the data request, paging
+  and errors.
+- [Integration](integration.html): the environments and the steps a data user follows to connect,
+  with the configuration and test requests.
+- [Dataset](dataset.html): the huisarts data that is made available, and the request for each data
+  element.
+- [CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html): the machine-readable list of
+  the requests the data holder supports.
 
 ### Support
 
