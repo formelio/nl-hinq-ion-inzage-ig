@@ -57,7 +57,7 @@ Fields with an `id` are returned as claims when the data holder's PDP introspect
 | `organization_ura` | `credentialSubject.organization.ura`, or the URA captured from `san.otherName` of the `X509Credential` |
 | `organization_name`, `organization_city` | `subject.O` and `subject.L` of the `X509Credential`. Only present with an `X509Credential`. |
 | `organization_agb` | `credentialSubject.organization.agb`. Only present with the HINQ-issued credentials. |
-| `organization_role_code_nl` | `credentialSubject.roleCodeNL` |
+| `healthcare_provider_role_type` | `credentialSubject.roleCodeNL` |
 | `employee_identifier`, `employee_name`, `employee_role` | `NutsEmployeeCredential` |
 | `patient_bsn` | `credentialSubject.bsn` of the `HinqBsnCredential` |
 

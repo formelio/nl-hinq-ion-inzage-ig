@@ -242,7 +242,7 @@
                 }
               },
               {
-                "id": "organization_role_code_nl",
+                "id": "healthcare_provider_role_type",
                 "path": [
                   "$.credentialSubject.roleCodeNL"
                 ],

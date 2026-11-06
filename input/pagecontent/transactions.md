@@ -175,7 +175,7 @@ Content-Type: application/json
   "organization_id": "did:web:example.vendor.nl:iam:organization-a",
   "organization_ura": "12345678",
   "organization_agb": "01234567",
-  "organization_role_code_nl": "Z3",
+  "healthcare_provider_role_type": "Z3",
   "employee_identifier": "j.doe@example.nl",
   "employee_name": "John Doe",
   "employee_role": "Nurse",
