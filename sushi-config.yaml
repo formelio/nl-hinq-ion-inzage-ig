@@ -42,7 +42,7 @@ pages:
     title: Integration
   dataset.md:
     title: Dataset
-  history.md:
+  changes.md:
     title: History
 
 # The parameters property represents IG.definition.parameter.
@@ -61,7 +61,7 @@ menu:
   Transactions: transactions.html
   Integration: integration.html
   Dataset: dataset.html
-  History: history.html
+  History: changes.html
 
 # ╭──────────────────────────────────────────SUSHI flags───────────────────────────────────────────╮
 # │  The flags below configure aspects of how SUSHI processes FSH.                                 │

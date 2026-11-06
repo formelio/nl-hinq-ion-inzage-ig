@@ -51,7 +51,7 @@ Each deviation is explained in
 | [Transactions](https://formelio.github.io/nl-hinq-ion-inzage-ig/transactions.html) | Sequence diagram, and example requests and responses for the access token request, DPoP proof, token introspection, patient search, data request and errors |
 | [Integration](https://formelio.github.io/nl-hinq-ion-inzage-ig/integration.html) | The steps a data user follows to connect: Nuts node configuration, credentials, mTLS and test requests |
 | [Dataset](https://formelio.github.io/nl-hinq-ion-inzage-ig/dataset.html) | The huisarts data elements and the request for each |
-| [History](https://formelio.github.io/nl-hinq-ion-inzage-ig/history.html) | Changelog |
+| [History](https://formelio.github.io/nl-hinq-ion-inzage-ig/changes.html) | Changelog |
 
 ## Repository Layout
 
@@ -116,7 +116,7 @@ the same Docker image, generates the guide into `./output` and deploys it to Git
   of This Guide section in `input/pagecontent/index.md`, and the Guide Pages table in this README.
 - **Deviations.** The deviation lists in `index.md` and this README must stay in sync.
 - **Policy.** Make every change in both policy files, except the trusted UZI CAs.
-- **Changelog.** Record significant changes in `input/pagecontent/history.md`. Bump `version` in
+- **Changelog.** Record significant changes in `input/pagecontent/changes.md`. Bump `version` in
   `sushi-config.yaml` for a new release.
 - **Style.** Pages use American English.
 - **Quality.** SUSHI must build without errors, and the QA report must have no new errors or
