@@ -100,10 +100,10 @@ organization obtains the credentials and how validity, rechecks and revocation w
 
 ##### Employee Identity
 
-Healthcare professionals are identified using a local employee identifier, called the "EmployeeID".
-The local employee name and local employee role are added as non-identifying attributes. All
-professionals have a local employee number. A national healthcare professional identifier and role
-are not yet available for all professionals.
+Healthcare professionals are identified using a local employee identifier. The local employee name
+and local employee role are added as non-identifying attributes. The role is used for audit
+logging, not for access decisions. All professionals have a local employee number. A national
+healthcare professional identifier and role are not yet available for all professionals.
 
 The healthcare professional's identity **MUST** be federated from the data user to the data holder. The data
 user does this by including a `NutsEmployeeCredential` in the access-token request. The request body is shown in [Access Token Request](transactions.html#access-token-request).
@@ -180,8 +180,9 @@ This credential federates the identity of the healthcare professional to the dat
 user's system self-attests it. [Healthcare Professional](#healthcare-professional) describes why it
 is needed and how the data user fills it.
 
-When the PDP introspects the token, it gets the professional's identifier and role back. The PDP uses
-them for the consent check. See [Consent](#consent).
+When the PDP introspects the token, it gets the professional's identifier, name and role back. The
+PDP uses the identifier for the consent check. See [Consent](#consent). The data holder records the
+identifier, name and role in its audit log.
 
 - The access-token request **MUST** include a `NutsEmployeeCredential`.
 
@@ -253,7 +254,6 @@ of this information.
 | The BSN of the patient | The `HinqBsnCredential` |
 | The URA of the requesting organization | The URA credential or the `X509Credential` |
 | The Zorgaanbiedertype of the requesting organization | The Zorgaanbiedertype credential |
-| The role code of the healthcare professional | The `NutsEmployeeCredential` |
 | The identifier of the healthcare professional | The `NutsEmployeeCredential` |
 
 The data holder adds its own details to the consent check.
