@@ -44,7 +44,8 @@ The data holder performs three access checks. The details are in [Access Control
 | Explicit patient consent is present | | ✓ |
 
 Addressing is **not** a step in this pilot. The data user is assumed to already know the data
-holder's endpoints.
+holder's endpoints. See [Addressing](#addressing). The endpoints and other values a data user needs
+are listed in [Values Used on This Page](integration.html#values-used-on-this-page).
 
 ### Addressing
 
@@ -52,25 +53,6 @@ Addressing would discover the FHIR base URL and the authorization server URL of 
 **In this pilot, addressing is out of scope.** Instead, the data user is **assumed to already know
 the data holder's endpoints**. The organization configures these endpoints as fixed values. There is
 therefore no discovery step.
-
-#### What the Data User Must Know
-
-To perform an exchange, the data user must know the following three things about the data holder:
-
-1. **`authorization_server`.** This is the data holder's OAuth2 issuer URL, of the form
-   `https://<node>/oauth2/<subject>`. The URL immediately identifies the data holder, because it
-   contains the data holder's subject/DID. From it, the Nuts node resolves the data holder's metadata
-   and keys.
-2. **Resource endpoint.** This is the FHIR base URL where the actual data request is sent after the
-   token has been obtained. The access token is a DPoP token. The client sends it with a new DPoP
-   proof for every request. The resource server validates the token and the proof at the
-   authorization server.
-3. **`scope`.** This is the use-case scope. For this use case it is **`ion_inzage`**. Strictly
-   speaking, the scope is a use-case constant rather than a property of the data holder, but the
-   caller must know it. The same identifier names the authorization policy for this use case. See
-   [Access Control](#access-control).
-
-#### Why There Is No Discovery
 
 There is a single known data holder, HINQ ION, and the number of participants is very small.
 Hosting a discovery service is therefore not worthwhile. It is sub-optimal and adds significant
