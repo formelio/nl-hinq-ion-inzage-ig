@@ -7,7 +7,7 @@ Description: "Example patient with BSN identifier, used to illustrate the BSN-ba
 
 * identifier[bsn].use = #official
 * identifier[bsn].system = "http://fhir.nl/fhir/NamingSystem/bsn"
-* identifier[bsn].value = "123456789"
+* identifier[bsn].value = "123456782"
 
 * name.use = #official
 * name.family = "van den Berg"

@@ -190,7 +190,7 @@ in a wallet. The data user's system creates them for every access-token request.
 the `credentials` field of the `request-service-access-token` call. The data user's Nuts node issues
 them with the organization's own DID and adds them to the Verifiable Presentation. The data holder's
 PDP gets their fields back when it introspects the token. An example request is shown in
-[Transactions](transactions.html#pull).
+[Access Token Request](transactions.html#access-token-request).
 
 [Issuance](#issuance) and [Lifecycle](#lifecycle) do not apply to these credentials.
 

@@ -46,14 +46,14 @@ The data holder performs three access checks. The details are in [Access Control
 Addressing is **not** a step in this pilot. The data user is assumed to already know the data
 holder's endpoints.
 
-### Endpoints and Configuration
+### Addressing
 
 Addressing would discover the FHIR base URL and the authorization server URL of a data holder.
 **In this pilot, addressing is out of scope.** Instead, the data user is **assumed to already know
 the data holder's endpoints**. The organization configures these endpoints as fixed values. There is
 therefore no discovery step.
 
-#### What the Data User Must Know?
+#### What the Data User Must Know
 
 To perform an exchange, the data user must know the following three things about the data holder:
 
@@ -69,7 +69,7 @@ To perform an exchange, the data user must know the following three things about
    caller must know it. The same identifier names the authorization policy for this use case. See
    [Access Control](#access-control).
 
-#### Why Is There No Discovery?
+#### Why There Is No Discovery
 
 There is a single known data holder, HINQ ION, and the number of participants is very small.
 Hosting a discovery service is therefore not worthwhile. It is sub-optimal and adds significant
@@ -123,7 +123,7 @@ professionals have a local employee number. A national healthcare professional i
 are not yet available for all professionals.
 
 The healthcare professional's identity **MUST** be federated from the data user to the data holder. The data
-user does this by including a `NutsEmployeeCredential` in the access-token request. The request body is shown in [Transactions](transactions.html#pull).
+user does this by including a `NutsEmployeeCredential` in the access-token request. The request body is shown in [Access Token Request](transactions.html#access-token-request).
 
 The `NutsEmployeeCredential` is **self-attested** by the data user's system. This is in line with the
 Zorginzage authentication approach in Nuts v6. The data user's application authenticates the
@@ -211,9 +211,10 @@ BSN. Its fields are listed in [HinqBsnCredential](credentials.html#hinqbsncreden
 When the PDP introspects the token at the data holder's Nuts node, it gets the BSN back. The PDP uses
 it for the consent check and passes it on with the request.
 
-**Why patient-bound tokens.** By default, Nuts scopes access tokens to the organization and use case,
-and the data holder derives the patient from each request. Nuts leaves this choice to the use case. This
-use case binds every token to one patient for the following reasons:
+**Why patient-bound tokens.** In Zorginzage, and by default in Nuts, an access token is bound to the
+organization and the use case. The data holder derives the patient from each request. Nuts leaves this
+choice to the use case. This use case deviates from Zorginzage and binds every token to one patient
+for the following reasons:
 
 - **Smaller impact of misuse.** An organization-level token can be used for any patient at the data
   holder. A leaked or misused patient-bound token exposes only one patient.
@@ -281,8 +282,13 @@ The data user:
 ### Network Security
 
 In production and acceptance environments, vendor organizations **MUST** use mutual TLS based on
-PKIoverheid certificates. Mutual TLS means that both the server and the client authenticate. In test
-environments, PKIoverheid certificates or public-trust certificates **MUST** be used.
+PKIoverheid certificates for the FHIR requests. Mutual TLS means that both the server and the client
+authenticate. HINQ's FHIR endpoint has a PKIoverheid G1 server certificate. HINQ accepts client
+certificates issued under G1 or G4. In test environments, PKIoverheid certificates or public-trust
+certificates **MUST** be used.
+
+The traffic between the Nuts nodes does not need mutual TLS. The Nuts endpoints use server
+certificates from a publicly trusted CA.
 
 The national specifications for network security, called "Veilig Netwerk", are not yet finalized.
 The current concept version prescribes PKIoverheid certificates. These are already widely in use by

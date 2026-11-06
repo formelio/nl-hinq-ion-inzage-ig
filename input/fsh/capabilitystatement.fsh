@@ -1,5 +1,5 @@
 // Minimal CapabilityStatement for the HINQ ION Inzage data holder (server).
-// The authorisation policy requires conformance to a CapabilityStatement to be evaluated for
+// The authorization policy requires conformance to a CapabilityStatement to be evaluated for
 // FHIR endpoint requests (see the Exchange Architecture volume).
 Instance: HINQIONDataHolder
 InstanceOf: CapabilityStatement
@@ -20,7 +20,7 @@ Description: "Capabilities a data holder exposes in the HINQ ION Inzage pull flo
 * format[+] = #xml
 
 * rest.mode = #server
-* rest.documentation = "All interactions are patient-scoped and protected by Nuts-based authentication, policy-based authorisation and an explicit consent check."
+* rest.documentation = "All interactions are patient-scoped and protected by Nuts-based authentication, policy-based authorization and an explicit consent check."
 
 // Patient: BSN-based POST search to obtain the technical identifier
 * rest.resource[0].type = #Patient
