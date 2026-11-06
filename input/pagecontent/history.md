@@ -28,6 +28,8 @@ Significant changes:
 - **Dataset defined.** The Dataset page lists the huisarts data elements and a generic request for
   each. Medicom provides STU3 resources following MedMij Huisartsgegevens 2.0. The HINQ ION service
   converts them to R4.
+- **Use Case & Roles removed.** The Dutch page repeated the Home page. Its role definitions and the
+  owner and trusted issuer are now on the Home page.
 - **Deviations from Zorginzage.** The list of deviations on the Home page is complete and includes
   the patient-bound access tokens.
 - **Technical artifacts.** The repository contains Nuts policy files for production and acceptance,

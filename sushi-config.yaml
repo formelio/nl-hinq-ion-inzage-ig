@@ -32,8 +32,6 @@ dependencies:
 pages:
   index.md:
     title: Home
-  functional.md:
-    title: Use Case & Roles
   exchange.md:
     title: Exchange Architecture
   credentials.md:
@@ -58,7 +56,6 @@ parameters:
 # ╰────────────────────────────────────────────────────────────────────────────────────────────────╯
 menu:
   Home: index.html
-  Use Case & Roles: functional.html
   Exchange Architecture: exchange.html
   Credentials & Issuance: credentials.html
   Transactions: transactions.html

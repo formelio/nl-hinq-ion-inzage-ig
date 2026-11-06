@@ -61,21 +61,28 @@ slower-moving national identity infrastructure. See
 
 ### Participating Parties and Roles (Pilot)
 
-The two roles are vastleggen / beschikbaarstellen (record and make available) for the data holder and
-raadplegen / tonen (consult and display) for the data user. See [Use Case & Roles](functional.html)
-for the role definitions.
+The use case has two roles:
 
-| Party | Vastleggen / beschikbaarstellen (data holder) | Raadplegen / tonen (data user) |
+- **Data holder.** Vastleggen / beschikbaarstellen, which means record and make available. After
+  authentication and authorization, HINQ ION makes the data of the source system available to a data
+  user.
+- **Data user.** Raadplegen / tonen, which means consult and display. The data user requests the
+  data from HINQ ION and displays it to the healthcare professional. In this pilot, the data user is
+  a Rivo-Noord viewer.
+
+There is no mandatory reciprocity. A participant does not have to implement both roles.
+
+| Party | Data holder | Data user |
 |-------|:--:|:--:|
 | HINQ ION (Medicom source data) | ✓ |   |
 | Rivo-Noord region viewer(s)     |   | ✓ |
 
-Addressing is out of scope for this pilot (see [Exchange Architecture](exchange.html)).
+HINQ is the owner of this specification and the trusted issuer of the organization credentials.
+
+Addressing is out of scope for this pilot. See [Addressing](exchange.html#addressing).
 
 ### Organization of This Guide
 
-- [Use Case & Roles](functional.html): functional overview, the participating parties and their
-  roles, and the functional flows (in Dutch).
 - [Exchange Architecture](exchange.html): the technical agreements: exchange patterns,
   identification, authentication, addressing, authorization, consent and network
   security (in English).

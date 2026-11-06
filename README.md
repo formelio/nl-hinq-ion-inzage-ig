@@ -45,8 +45,7 @@ Each deviation is explained in
 
 | Page | Content |
 |------|---------|
-| [Home](https://formelio.github.io/nl-hinq-ion-inzage-ig/index.html) | Purpose, scope, relationship to Zorginzage, participants and organization of the guide |
-| [Use Case & Roles](https://formelio.github.io/nl-hinq-ion-inzage-ig/functional.html) | Use case, roles, participating parties and functional flows. This page is in Dutch. |
+| [Home](https://formelio.github.io/nl-hinq-ion-inzage-ig/index.html) | Purpose, scope, relationship to Zorginzage, roles, participating parties and organization of the guide |
 | [Exchange Architecture](https://formelio.github.io/nl-hinq-ion-inzage-ig/exchange.html) | Exchange pattern, addressing, identification and authentication, access control, consent and network security |
 | [Credentials & Issuance](https://formelio.github.io/nl-hinq-ion-inzage-ig/credentials.html) | Credential specifications, self-attested credentials, the JSON-LD context, issuance and lifecycle |
 | [Transactions](https://formelio.github.io/nl-hinq-ion-inzage-ig/transactions.html) | Sequence diagram, and example requests and responses for the access token request, DPoP proof, token introspection, patient search, data request and errors |
@@ -115,12 +114,11 @@ the same Docker image, generates the guide into `./output` and deploys it to Git
   the links to it.
 - **Adding or removing a page.** Update `pages` and `menu` in `sushi-config.yaml`, the Organization
   of This Guide section in `input/pagecontent/index.md`, and the Guide Pages table in this README.
-- **Deviations.** The deviation lists in `index.md`, `functional.md` and this README must stay in
-  sync.
+- **Deviations.** The deviation lists in `index.md` and this README must stay in sync.
 - **Policy.** Make every change in both policy files, except the trusted UZI CAs.
 - **Changelog.** Record significant changes in `input/pagecontent/history.md`. Bump `version` in
   `sushi-config.yaml` for a new release.
-- **Style.** Pages use American English. `functional.md` is written in Dutch.
+- **Style.** Pages use American English.
 - **Quality.** SUSHI must build without errors, and the QA report must have no new errors or
   warnings. Accepted warnings go in `input/ignoreWarnings.txt` with the reason.
 
