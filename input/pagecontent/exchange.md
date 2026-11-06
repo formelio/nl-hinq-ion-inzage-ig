@@ -262,6 +262,10 @@ The data holder adds its own details to the consent check.
 
 The data holder **MUST** enforce the access rules described in [Data Request](#data-request).
 
+The data holder **MUST** support the requests in the
+[CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html). The data user **MUST** only use
+those requests and their search parameters.
+
 The data user:
 
 - **MUST** include a `NutsEmployeeCredential` in the access-token request.

@@ -42,7 +42,9 @@ patient's logical id from the patient search.
 
 The requests are generic. They select data by resource type and patient. Because the R4 resources
 are converted, a data user **MUST NOT** rely on `_profile` or `meta.profile` to select or recognize
-data. A data user **MAY** add other standard R4 search parameters to narrow a request.
+data. A data user **MAY** add the optional search parameters listed in the
+[CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html). Other search parameters are not
+allowed.
 
 | Data element | Request |
 |--------------|---------|
@@ -76,8 +78,8 @@ also contains the `Medication` resources that the agreements reference.
 #### Measurements and Results
 
 The measurements and the diagnostic and laboratory results are all `Observation` resources. A data
-user can tell them apart by `Observation.code`. It **MAY** narrow the request with the standard
-`code` or `category` search parameters.
+user can tell them apart by `Observation.code`. It **MAY** narrow the request with the `code` or
+`category` search parameters.
 
 #### SOEP Reports
 

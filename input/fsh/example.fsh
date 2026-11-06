@@ -10,6 +10,7 @@ Description: "Example patient with BSN identifier, used to illustrate the BSN-ba
 * identifier[bsn].value = "123456782"
 
 * name.use = #official
+* name.text = "Maria Anna van den Berg"
 * name.family = "van den Berg"
 // nl-core-NameInformation requires each given part to carry the iso21090-EN-qualifier
 // extension (BR = given name, IN = initial).

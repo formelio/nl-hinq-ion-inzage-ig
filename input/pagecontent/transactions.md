@@ -288,8 +288,10 @@ access token for all requests for this patient. It creates a new DPoP proof for 
 
 **Rules**
 
-- Every request **MUST** be scoped to the patient, with `patient={id}` or `subject=Patient/{id}`.
+- Every request **MUST** be scoped to the patient, with `patient={id}`.
 - Only search requests are allowed on individual resource types.
+- Only the resource types, search parameters and includes in the
+  [CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html) are allowed.
 
 **Request**
 
@@ -366,7 +368,7 @@ following status codes:
 
 | Status | When |
 |--------|------|
-| `400 Bad Request` | The request does not follow the rules of the transaction. Examples are a GET-based patient search, a patient search that is not on BSN, a data request without a patient parameter, or an invalid search parameter. |
+| `400 Bad Request` | The request does not follow the rules of the transaction. Examples are a GET-based patient search, a patient search that is not on BSN, a data request without a patient parameter, or a search parameter that the CapabilityStatement does not list. |
 | `401 Unauthorized` | The access token is missing, invalid or expired. Introspection returns `"active": false`. The same applies when the DPoP proof is missing or invalid, or when the token is not a DPoP token. |
 | `403 Forbidden` | The access token is valid, but the request does not meet the access rules. Examples are a missing consent, a request for another patient than the token is bound to, or a request for an excluded resource type such as `List` or `Bundle`. |
 
