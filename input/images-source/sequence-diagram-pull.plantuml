@@ -1,67 +1,71 @@
 @startuml
 hide footbox
 autonumber
-skinparam BoxPadding 20
+skinparam BoxPadding 10
+skinparam ParticipantPadding 5
+skinparam maxMessageSize 180
 
-box Data user organisation `A` (Rivo-Noord viewer)\n
+box Data user organization (Rivo-Noord viewer)\n
 actor "Healthcare professional" as User
-participant XIS as req
-participant "Nuts-node" as rn
+participant "Data user application" as App
+participant "Nuts node" as UserNode
 end box
 
-
-box Data holder organisation `B` (HINQ ION)\n
-participant "Nuts-node" as cn
-boundary PEP
-participant Fhir
+box Data holder organization (HINQ ION)\n
+participant "Nuts node" as HolderNode
+participant "PDP" as PDP
+participant "HINQ ION service" as Ion
 end box
-User -> req++ : Log in
-req -> req : Create User session, \nUser info needed for NutsEmployeeCredential (step 6)
 
-== Later in User session ==
+box Source organization\n
+participant "Source system" as Src
+end box
 
-User -> req: request information for Patient
-    req -> req: Resolve Patient BSN; data holder endpoints are known (hardcoded)
-    note right of req: Addressing is out of scope: the authorization_server (OAuth2 issuer URL)\nand fhir_base_url of the HINQ ION data holder are configured up front.\nThe data user is whitelisted at the source.
+User -> App ++ : Log in
+App -> App : Create user session\nwith the details for the NutsEmployeeCredential
 
-    ==get access token==
+== Access Token Request ==
 
-    req -> rn++: Get access token \nPOST /internal/auth/v2/{subjectID of Data user organisation}/request-service-access-token
-        note right of rn : body carries authorization_server (issuer URL) + scope (ion_inzage)\nand NutsEmployeeCredential; URA, AGB and Zorgaanbiedertype credentials are presented from the wallet
-        rn <--> cn : nuts-nodes handle access token request, request is forwarded using value of "authorization_server" element in body
-        rn --> req-- : Access token
-    |||
+User -> App : Open patient
+App -> App : Resolve the patient's BSN
+App -> UserNode ++ : Request access token\nwith NutsEmployeeCredential and HinqBsnCredential
+UserNode <-> HolderNode : Presentation definition and\nVerifiable Presentation
+UserNode --> App -- : DPoP access token,\nbound to this patient
 
-    ==get Patient resource including patient-id==
+== Patient Search ==
 
-    note right of req: POST-based Patient search on BSN
-    req -> PEP++: POST /fhir/Patient/_search
-    PEP -> cn++ : introspect access token\nPOST /internal/auth/v2/accesstoken/introspect
-    PEP <-- cn-- : valid token + requesting_URA + USER{identifier,name,roleName}
-    PEP -> PEP: Authorization (requestor whitelisted + URA present)\nand explicit consent check (e.g. local or Mitz)
-    PEP -> Fhir++: POST /fhir/Patient?search
-    return: Patient Fhir resource (with patient-id)
-    return: Patient Fhir resource (with patient-id)
+App -> UserNode ++ : Create DPoP proof
+UserNode --> App -- : DPoP proof
+App -> PDP ++ : POST /Patient/_search\nwith the BSN
+PDP -> HolderNode ++ : Token introspection
+HolderNode --> PDP -- : Claims
+PDP -> HolderNode ++ : Validate DPoP proof
+HolderNode --> PDP -- : Valid
+PDP -> PDP : Check the access rules\nand the patient's consent
+PDP -> Ion ++ : POST /Patient/_search
+Ion -> Src ++ : Request the patient
+Src --> Ion -- : Patient
+Ion --> PDP -- : Bundle with the Patient
+PDP --> App -- : Bundle with the Patient\nand its logical id
 
-    |||
-    == Retrieve other resources ==
+== Data Request ==
 
-    note right of req
-    - Other resources are gathered based on internal patient-id of data holder organisation (received above)
-    - the access token received above can be reused in the loop below
-    end note
-    loop For each resource except Patient
-        req -> PEP++: GET /fhir/{resource}?patient={patient-id}
-            PEP -> cn++ : introspect access token\nPOST /internal/auth/v2/accesstoken/introspect
-                PEP <-- cn-- : valid token + requesting_URA + USER{identifier,name,roleName}
-            PEP -> PEP: Authorization \n(requestor whitelisted + explicit consent)
-            PEP -> Fhir++: GET /fhir/{resource}?patient={patient-id}
-            return: Fhir resource
-            return: Fhir Resource
-    end loop
+loop For each resource type
+  App -> UserNode ++ : Create DPoP proof
+  UserNode --> App -- : DPoP proof
+  App -> PDP ++ : GET /{resource}?patient={id}
+  PDP -> HolderNode ++ : Token introspection
+  HolderNode --> PDP -- : Claims
+  PDP -> HolderNode ++ : Validate DPoP proof
+  HolderNode --> PDP -- : Valid
+  PDP -> PDP : Check the access rules\nand the patient's consent
+  PDP -> Ion ++ : GET /{resource}?patient={id}
+  Ion -> Src ++ : Request the data
+  Src --> Ion -- : Data
+  Ion --> PDP -- : Bundle
+  PDP --> App -- : Bundle
+end loop
 
-    ==Data user XIS displays data received from the HINQ ION data holder==
-
-    User <- req --: Display external Patient information
+App --> User -- : Display the patient's data
 
 @enduml
