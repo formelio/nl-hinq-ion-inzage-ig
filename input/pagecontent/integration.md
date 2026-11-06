@@ -242,13 +242,13 @@ Request an access token for the test patient with consent. Fill in the `NutsEmpl
 a test user of your application.
 
 ```bash
-TOKEN=$(curl -s -X POST \
+RESPONSE=$(curl -s -X POST \
   http://localhost:8081/internal/auth/v2/organization-a/request-service-access-token \
   -H "Content-Type: application/json" \
   -d '{
     "authorization_server": "https://nuts.acc.example.hinq.nl/oauth2/hinq-ion",
     "scope": "ion_inzage",
-    "token_type": "Bearer",
+    "token_type": "DPoP",
     "credentials": [
       {
         "@context": ["https://www.w3.org/2018/credentials/v1", "https://nuts.nl/credentials/v1"],
@@ -265,22 +265,44 @@ TOKEN=$(curl -s -X POST \
         "credentialSubject": { "bsn": "123456782" }
       }
     ]
-  }' | jq -r .access_token)
-echo "$TOKEN"
+  }')
+TOKEN=$(echo "$RESPONSE" | jq -r .access_token)
+DPOP_KID=$(echo "$RESPONSE" | jq -r .dpop_kid)
+echo "$RESPONSE"
 ```
 
-**Expected:** an access token is printed. The full response is shown in
+**Expected:** a response with `"token_type": "DPoP"`, an `access_token` and a `dpop_kid`. The full response is shown in
 [Access Token Request](transactions.html#access-token-request).
 
 The Nuts node caches access tokens. A request with the same body returns the cached token while it is
 valid. A request for another patient has a different body and gets a new token.
 
+#### Create DPoP Proofs
+
+Every FHIR request needs a new DPoP proof for its HTTP method and URL. This shell function asks
+your Nuts node for one. The `dpop_kid` contains `#` and `:`, so it is URL-encoded in the path:
+
+```bash
+dpop() {
+  curl -s -X POST \
+    "http://localhost:8081/internal/auth/v2/dpop/$(jq -rn --arg k "$DPOP_KID" '$k|@uri')" \
+    -H "Content-Type: application/json" \
+    -d "$(jq -n --arg htm "$1" --arg htu "$2" --arg token "$TOKEN" \
+      '{htm: $htm, htu: $htu, token: $token}')" | jq -r .dpop
+}
+```
+
+The first argument is the HTTP method. The second is the URL without query parameters. See
+[DPoP Proof](transactions.html#dpop-proof).
+
 #### Search the Patient
 
 ```bash
-curl -X POST https://fhir.acc.example.hinq.nl/fhir/Patient/_search \
+URL=https://fhir.acc.example.hinq.nl/fhir/Patient/_search
+curl -X POST "$URL" \
   --cert client.pem --key client.key --cacert pkioverheid-g1-root.pem \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "Authorization: DPoP $TOKEN" \
+  -H "DPoP: $(dpop POST "$URL")" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   --data-urlencode "identifier=http://fhir.nl/fhir/NamingSystem/bsn|123456782"
 ```
@@ -291,9 +313,11 @@ request. See [Patient Search](transactions.html#patient-search).
 #### Request Data
 
 ```bash
-curl "https://fhir.acc.example.hinq.nl/fhir/Observation?patient=<patient id>" \
+URL=https://fhir.acc.example.hinq.nl/fhir/Observation
+curl "$URL?patient=<patient id>" \
   --cert client.pem --key client.key --cacert pkioverheid-g1-root.pem \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "Authorization: DPoP $TOKEN" \
+  -H "DPoP: $(dpop GET "$URL")" \
   -H "Accept: application/fhir+json"
 ```
 
@@ -319,7 +343,7 @@ The connection works when the first three requests succeed and the last one is d
 | Token request returns `503` | HINQ's authorization server cannot be reached. | Check the authorization server URL and outbound network access. |
 | Loading a credential returns `400` | The credential is invalid, or `credentialSubject.id` is not your DID. | Check that HINQ issued it to the DID of your subject. |
 | TLS handshake fails on a FHIR request | The client certificate is missing or not issued under G1 or G4, or the G1 root is not trusted. | See [Step 5](#step-5-configure-mtls-for-fhir-requests). |
-| FHIR request returns `401` | The access token is missing, invalid or expired. | Request a new access token. |
+| FHIR request returns `401` | The access token is missing, invalid or expired, or the DPoP proof is missing or invalid. | Request a new access token. Create a new proof for every request, with the exact method and the URL without query parameters. Send the token with the `DPoP` scheme, not `Bearer`. |
 | FHIR request returns `403` | Access is denied, for example because the patient has no consent or the BSN differs from the token. | Check that the token was requested for the same BSN. |
 
 ### Going to Production

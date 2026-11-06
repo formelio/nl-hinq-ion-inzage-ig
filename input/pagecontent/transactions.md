@@ -15,8 +15,8 @@ The sequence diagram shows a data user retrieving data for one patient.
 |-------------|------|
 | Healthcare professional | Uses the data user application. |
 | Data user application | The Rivo-Noord viewer. It authenticates the healthcare professional and makes all requests. |
-| Data user's Nuts node | Holds the organization credentials and requests the access token. |
-| Data holder's Nuts node | The authorization server. It issues the access token and introspects it. |
+| Data user's Nuts node | Holds the organization credentials, requests the access token and creates the DPoP proofs. |
+| Data holder's Nuts node | The authorization server. It issues the access token, introspects it and validates the DPoP proofs. |
 | PDP | The data holder's policy decision point. It checks every FHIR request. |
 | HINQ ION service | Receives the FHIR requests that the PDP allows. It acts as a proxy and retrieves the data from the source organizations. It handles the authorization towards those organizations. |
 | Source system | The system of a source healthcare organization that holds the data. |
@@ -32,8 +32,9 @@ The interaction has four steps:
    patient's logical id at the data holder.
 4. **[Data Request](#data-request).** The data user requests the patient's data with that logical id.
 
-At every FHIR request, the PDP checks the token through
-[Token Introspection](#token-introspection). [Errors](#errors) lists the responses when a request is
+The access token is a DPoP token. Before every FHIR request, the data user creates a
+[DPoP Proof](#dpop-proof). At every FHIR request, the PDP checks the token through
+[Token Introspection](#token-introspection) and validates the proof. [Errors](#errors) lists the responses when a request is
 rejected.
 
 ### Access Token Request
@@ -52,7 +53,7 @@ Content-Type: application/json
 {
   "authorization_server": "https://<data-holder-node>/oauth2/<subject>",
   "scope": "ion_inzage",
-  "token_type": "Bearer",
+  "token_type": "DPoP",
   "credentials": [
     {
       "@context": [
@@ -88,7 +89,8 @@ Content-Type: application/json
 
 {
   "access_token": "<access token>",
-  "token_type": "Bearer",
+  "token_type": "DPoP",
+  "dpop_kid": "did:web:example.vendor.nl:iam:organization-a#<key id>",
   "expires_in": 900,
   "scope": "ion_inzage"
 }
@@ -97,10 +99,50 @@ Content-Type: application/json
 **Rules**
 
 - The data user **MUST** request a separate access token for every patient.
+- The data user **MUST** request a DPoP token, with `"token_type": "DPoP"`. The data holder rejects
+  a Bearer token.
 - The request **MUST** contain a `NutsEmployeeCredential` and a `HinqBsnCredential`. Their fields are
   listed in [Self-Attested Credentials](credentials.html#self-attested-credentials).
 - The organization credentials are presented from the wallet. They are not part of the request body.
   See [Healthcare Organization](exchange.html#healthcare-organization).
+
+### DPoP Proof
+
+The access token is bound to a key of the data user's subject. Before every FHIR request, the data
+user asks its own Nuts node for a DPoP proof. The proof is valid for one request: one HTTP method
+and one URL. The `kid` in the path is the `dpop_kid` from the token response, URL-encoded.
+
+**Request**
+
+```http
+POST <internal Nuts interface>/internal/auth/v2/dpop/<URL-encoded dpop_kid>
+Content-Type: application/json
+
+{
+  "htm": "POST",
+  "htu": "{fhir_base}/Patient/_search",
+  "token": "<access token>"
+}
+```
+
+**Response**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "dpop": "<DPoP proof>"
+}
+```
+
+**Rules**
+
+- The data user **MUST** create a new DPoP proof for every FHIR request.
+- `htm` **MUST** be the HTTP method of the request. `htu` **MUST** be the URL of the request
+  without query parameters.
+- The data user sends the access token as `Authorization: DPoP <access token>` and the proof as
+  `DPoP: <DPoP proof>`.
 
 ### Token Introspection
 
@@ -137,13 +179,50 @@ Content-Type: application/json
   "employee_identifier": "j.doe@example.nl",
   "employee_name": "John Doe",
   "employee_role": "Nurse",
-  "patient_bsn": "123456782"
+  "patient_bsn": "123456782",
+  "cnf": {
+    "jkt": "<thumbprint of the data user's DPoP key>"
+  }
 }
 ```
 
 The example shows the claims for the HINQ-issued credentials. With an `X509Credential`, the response
 has `organization_name` and `organization_city` but it is missing `organization_agb`. The Nuts node also
 returns the presented credentials. They are left out of the example.
+
+The `cnf.jkt` claim is the thumbprint of the key the access token is bound to. The PDP **MUST**
+reject a token without `cnf.jkt`, because it is not a DPoP token.
+
+**DPoP proof validation**
+
+After the introspection, the PDP validates the DPoP proof of the request at the data holder's Nuts
+node:
+
+```http
+POST <internal Nuts interface>/internal/auth/v2/dpop/validate
+Content-Type: application/json
+
+{
+  "dpop_proof": "<DPoP proof>",
+  "method": "POST",
+  "thumbprint": "<cnf.jkt from the introspection response>",
+  "token": "<access token>",
+  "url": "{fhir_base}/Patient/_search"
+}
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "valid": true
+}
+```
+
+The Nuts node checks the signature, the method, the URL, the thumbprint, the access token hash and
+the uniqueness of the proof. The `url` **MUST** be the URL the data user called, not a URL that a
+proxy rewrote. When the proof is invalid, the response has `"valid": false` and a `reason`.
 
 ### Patient Search
 
@@ -161,7 +240,8 @@ holder.
 
 ```http
 POST {fhir_base}/Patient/_search
-Authorization: Bearer <access token>
+Authorization: DPoP <access token>
+DPoP: <DPoP proof>
 Content-Type: application/x-www-form-urlencoded
 
 identifier=http://fhir.nl/fhir/NamingSystem/bsn|123456782
@@ -204,7 +284,7 @@ the huisartsenpraktijk. See [Patient](dataset.html#patient) in the Dataset.
 ### Data Request
 
 The data user requests the patient's data with the logical id from the patient search. It reuses the
-access token for all requests for this patient.
+access token for all requests for this patient. It creates a new DPoP proof for every request.
 
 **Rules**
 
@@ -218,7 +298,8 @@ patient's observations.
 
 ```http
 GET {fhir_base}/Observation?patient=patient-123
-Authorization: Bearer <access token>
+Authorization: DPoP <access token>
+DPoP: <DPoP proof>
 Accept: application/fhir+json
 ```
 
@@ -286,7 +367,7 @@ following status codes:
 | Status | When |
 |--------|------|
 | `400 Bad Request` | The request does not follow the rules of the transaction. Examples are a GET-based patient search, a patient search that is not on BSN, a data request without a patient parameter, or an invalid search parameter. |
-| `401 Unauthorized` | The access token is missing, invalid or expired. Introspection returns `"active": false`. |
+| `401 Unauthorized` | The access token is missing, invalid or expired. Introspection returns `"active": false`. The same applies when the DPoP proof is missing or invalid, or when the token is not a DPoP token. |
 | `403 Forbidden` | The access token is valid, but the request does not meet the access rules. Examples are a missing consent, a request for another patient than the token is bound to, or a request for an excluded resource type such as `List` or `Bundle`. |
 
 The response body is a FHIR `OperationOutcome`.
@@ -309,14 +390,15 @@ Content-Type: application/fhir+json
 }
 ```
 
-For a `401`, the response also has a `WWW-Authenticate` header, as described in
-[RFC 6750](https://www.rfc-editor.org/rfc/rfc6750#section-3). The data user requests a new access
-token:
+For a `401`, the response also has a `WWW-Authenticate` header with the `DPoP` scheme, as
+described in [RFC 9449](https://www.rfc-editor.org/rfc/rfc9449#section-7.1). When the token is
+invalid or expired, the data user requests a new access token. When the proof is invalid, the data
+user creates a new proof:
 
 ```http
 HTTP/1.1 401 Unauthorized
 Content-Type: application/fhir+json
-WWW-Authenticate: Bearer error="invalid_token"
+WWW-Authenticate: DPoP error="invalid_token"
 
 {
   "resourceType": "OperationOutcome",
@@ -324,7 +406,7 @@ WWW-Authenticate: Bearer error="invalid_token"
     {
       "severity": "error",
       "code": "login",
-      "diagnostics": "The access token is missing, invalid or expired"
+      "diagnostics": "The access token or the DPoP proof is missing, invalid or expired"
     }
   ]
 }

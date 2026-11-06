@@ -7,6 +7,8 @@ Significant changes:
 
 - **Patient-bound access tokens.** Every access token is bound to one patient through the
   self-attested `HinqBsnCredential`. The data user requests a separate token for every patient.
+- **DPoP access tokens.** The access token is a DPoP token. The data user sends a new DPoP proof
+  with every FHIR request, and the data holder validates it.
 - **X509Credential as an alternative.** An `X509Credential` from a UZI server certificate is accepted
   instead of the URA and AGB credentials. The Zorgaanbiedertype credential is always required.
 - **Credential type names.** The HINQ-issued credentials are named `HinqUraCredential`,

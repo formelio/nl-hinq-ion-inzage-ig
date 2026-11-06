@@ -62,8 +62,9 @@ To perform an exchange, the data user must know the following three things about
    contains the data holder's subject/DID. From it, the Nuts node resolves the data holder's metadata
    and keys.
 2. **Resource endpoint.** This is the FHIR base URL where the actual data request is sent after the
-   token has been obtained. The client adds the access token as a Bearer token. The resource server
-   validates the token at the authorization server.
+   token has been obtained. The access token is a DPoP token. The client sends it with a new DPoP
+   proof for every request. The resource server validates the token and the proof at the
+   authorization server.
 3. **`scope`.** This is the use-case scope. For this use case it is **`ion_inzage`**. Strictly
    speaking, the scope is a use-case constant rather than a property of the data holder, but the
    caller must know it. The same identifier names the authorization policy for this use case. See
@@ -243,10 +244,17 @@ rules. It only requires that the PDP applies exactly these rules.
 The access rules are:
 
 - The access token **MUST** contain all information listed in [Consent](#consent).
+- The access token **MUST** be a DPoP token. Every request **MUST** carry a valid DPoP proof for
+  the access token, the HTTP method and the URL of the request. See
+  [DPoP Proof](transactions.html#dpop-proof).
 - Patient context is mandatory. The access token **MUST** be bound to a patient. The PDP takes the
   patient's BSN from the token, not from the request.
 - The requested data **MUST** belong to the patient the access token is bound to.
 - Explicit patient consent **MUST** be checked before returning data. See [Consent](#consent).
+
+**Why DPoP.** A Bearer token can be used by anyone who holds it. A DPoP token is bound to a key of
+the data user's subject. A leaked token cannot be used without that key. Mutual TLS does not give
+this protection, because the token is not bound to the client certificate.
 
 #### Consent
 
