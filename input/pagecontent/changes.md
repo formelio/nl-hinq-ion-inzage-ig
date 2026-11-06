@@ -20,6 +20,9 @@ Significant changes:
 - **Network security clarified.** Mutual TLS applies to the FHIR requests only. HINQ's FHIR
   endpoint has a PKIoverheid G1 server certificate and accepts G1 or G4 client certificates. The
   Nuts endpoints use publicly trusted certificates.
+- **CapabilityStatement completed.** The CapabilityStatement lists every allowed request of the
+  dataset, with the required and optional search parameters. Other search parameters are not
+  allowed. The `subject` parameter is no longer accepted as an alternative to `patient`.
 - **Consent information.** The professional's role is no longer part of the consent check. It is
   recorded for audit logging.
 
@@ -44,6 +47,8 @@ Significant changes:
 - **Use Case & Roles removed.** The Dutch page repeated the Home page. Its role definitions and the
   owner and trusted issuer are now on the Home page.
 - **Deviations from Zorginzage.** The list of deviations on the Home page is complete.
+- **History page renamed.** The changelog moved from `history.html` to `changes.html`, because the
+  publication process reserves `history.html` for the list of published versions.
 
 **Repository**
 
