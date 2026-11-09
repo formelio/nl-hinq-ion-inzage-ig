@@ -1,4 +1,4 @@
-This page lists the steps a data user follows to connect to the HINQ ION for the `ion_inzage` use
+This page lists the steps a data user follows to connect to HINQ ION for the `ion_inzage` use
 case. After the last step, the data user retrieves data for a test patient. Why each step is needed
 is described in [Exchange Architecture](exchange.html) and [Credentials & Issuance](credentials.html).
 The requests themselves are explained in [Transactions](transactions.html).
@@ -39,7 +39,7 @@ environment are not valid in the other.
 - Optional: a UZI server certificate, to use an `X509Credential` instead of the URA and AGB
   credentials.
 
-### Values Used on This Page
+### Connection Details
 
 The examples on this page use the following values. Values marked as a placeholder are not
 determined yet. HINQ provides the real values.
@@ -61,7 +61,7 @@ The examples also use these values of the data user. Replace them with your own:
 | Name | Example |
 |------|---------|
 | Public URL of your Nuts node | `https://nuts.example-vendor.nl` |
-| Internal interface of your Nuts node | `http://localhost:8081` |
+| Internal interface of your Nuts node, for example its service URL in your cluster | `http://internal-nuts-base` |
 | Subject of your organization | `organization-a` |
 
 ### Step 1: Configure the Nuts Node
@@ -77,7 +77,7 @@ didmethods:
 
 http:
   internal:
-    address: 127.0.0.1:8081
+    address: :8081
   public:
     address: :8080
 
@@ -130,8 +130,10 @@ The reverse proxy **MUST** forward the following paths of the public interface o
 | `/oauth2` | OAuth2 metadata |
 | `/.well-known` | DID and OAuth2 metadata |
 
-The internal interface **MUST NOT** be reachable from outside your network. It has no built-in
-authentication unless `http.internal.auth` is configured.
+The internal interface listens on port `8081`, so your application can reach it inside the
+cluster. It **MUST NOT** be reachable from outside your network. Restrict it, for example with a
+network policy, to your own application. It has no built-in authentication unless
+`http.internal.auth` is configured.
 
 The server certificate on the reverse proxy **MUST** be issued by a publicly trusted CA. HINQ's
 Nuts node checks it against the standard trust store of its operating system, and a PKIoverheid
@@ -144,7 +146,7 @@ do. See [Step 5](#step-5-configure-mtls-for-fhir-requests).
 Restart the node and check that it is healthy:
 
 ```bash
-curl http://localhost:8081/health
+curl http://internal-nuts-base/health
 ```
 
 ### Step 2: Create the Organization Subject
@@ -152,7 +154,7 @@ curl http://localhost:8081/health
 Create a subject for your organization. The Nuts node creates its `did:web` DID and keys.
 
 ```bash
-curl -X POST http://localhost:8081/internal/vdr/v2/subject \
+curl -X POST http://internal-nuts-base/internal/vdr/v2/subject \
   -H "Content-Type: application/json" \
   -d '{"subject": "organization-a"}'
 ```
@@ -164,12 +166,13 @@ The DID is in `documents[0].id` of the response:
   "subject": "organization-a",
   "documents": [
     {
-      "id": "did:web:nuts.example-vendor.nl:iam:<id>",
-      ...
+      "id": "did:web:nuts.example-vendor.nl:iam:<id>"
     }
   ]
 }
 ```
+
+The response is shortened to the fields used here.
 
 Check that the DID document is publicly reachable at
 `https://nuts.example-vendor.nl/iam/<id>/did.json`. HINQ's Nuts node fetches it to verify your
@@ -220,7 +223,7 @@ Load every credential into the wallet of your organization's subject. A JSON-LD 
 a JSON object:
 
 ```bash
-curl -X POST http://localhost:8081/internal/vcr/v2/holder/organization-a/vc \
+curl -X POST http://internal-nuts-base/internal/vcr/v2/holder/organization-a/vc \
   -H "Content-Type: application/json" \
   -d @hinq-ura-credential.json
 ```
@@ -228,7 +231,7 @@ curl -X POST http://localhost:8081/internal/vcr/v2/holder/organization-a/vc \
 A JWT credential, such as the `X509Credential`, is sent as a JSON string:
 
 ```bash
-curl -X POST http://localhost:8081/internal/vcr/v2/holder/organization-a/vc \
+curl -X POST http://internal-nuts-base/internal/vcr/v2/holder/organization-a/vc \
   -H "Content-Type: application/json" \
   -d "\"$(cat x509-credential.jwt)\""
 ```
@@ -240,7 +243,7 @@ revoked.
 Check the content of the wallet:
 
 ```bash
-curl http://localhost:8081/internal/vcr/v2/holder/organization-a/vc
+curl http://internal-nuts-base/internal/vcr/v2/holder/organization-a/vc
 ```
 
 The wallet **MUST** hold either the URA and AGB credentials or an `X509Credential`, and always the
@@ -252,7 +255,7 @@ first one it finds, which can be the old one. Delete a credential by its `id`, U
 
 ```bash
 curl -X DELETE \
-  "http://localhost:8081/internal/vcr/v2/holder/organization-a/vc/$(jq -rn --arg id "<credential id>" '$id|@uri')"
+  "http://internal-nuts-base/internal/vcr/v2/holder/organization-a/vc/$(jq -rn --arg id "<credential id>" '$id|@uri')"
 ```
 
 ### Step 5: Configure mTLS for FHIR Requests
@@ -264,10 +267,7 @@ The FHIR requests from your application to HINQ use mutual TLS:
 - **HINQ's server certificate.** HINQ's FHIR endpoint has a PKIoverheid server certificate issued
   under the G1 hierarchy. Your application **MUST** trust the G1 root. Add
   `PrivateRootCA-G1.cer`, Staat der Nederlanden Private Root CA - G1, from
-  [cert.pkioverheid.nl](http://cert.pkioverheid.nl/) to its truststore.
-
-HINQ only checks that your client certificate is issued under G1 or G4. You do not need to register
-the certificate with HINQ.
+  [cert.pkioverheid.nl](http://cert.pkioverheid.nl/) to its trust store.
 
 The examples below use these files:
 
@@ -289,7 +289,7 @@ a test user of your application.
 
 ```bash
 RESPONSE=$(curl -s -X POST \
-  http://localhost:8081/internal/auth/v2/organization-a/request-service-access-token \
+  http://internal-nuts-base/internal/auth/v2/organization-a/request-service-access-token \
   -H "Content-Type: application/json" \
   -d '{
     "authorization_server": "https://nuts.acc.example.hinq.nl/oauth2/hinq-ion",
@@ -331,7 +331,7 @@ your Nuts node for one. The `dpop_kid` contains `#` and `:`, so it is URL-encode
 ```bash
 dpop() {
   curl -s -X POST \
-    "http://localhost:8081/internal/auth/v2/dpop/$(jq -rn --arg k "$DPOP_KID" '$k|@uri')" \
+    "http://internal-nuts-base/internal/auth/v2/dpop/$(jq -rn --arg k "$DPOP_KID" '$k|@uri')" \
     -H "Content-Type: application/json" \
     -d "$(jq -n --arg htm "$1" --arg htu "$2" --arg token "$TOKEN" \
       '{htm: $htm, htu: $htu, token: $token}')" | jq -r .dpop
@@ -341,7 +341,7 @@ dpop() {
 The first argument is the HTTP method. The second is the URL without query parameters. See
 [DPoP Proof](transactions.html#dpop-proof).
 
-#### Search the Patient
+#### Search for the Patient
 
 ```bash
 URL=https://fhir.acc.example.hinq.nl/fhir/Patient/_search
@@ -377,7 +377,7 @@ link. See [Paging](transactions.html#paging).
 #### Check That Access Is Denied Without Consent
 
 Repeat [Request an Access Token](#request-an-access-token) with BSN `111222333`. Then repeat
-[Search the Patient](#search-the-patient) with the new token and BSN `111222333`.
+[Search for the Patient](#search-for-the-patient) with the new token and BSN `111222333`.
 
 **Expected:** `403 Forbidden` with an `OperationOutcome`. See [Errors](transactions.html#errors).
 
@@ -393,19 +393,18 @@ The connection works when the first three requests succeed and the last one is d
 | Token request returns `503` | HINQ's authorization server cannot be reached. | Check the authorization server URL and outbound network access. |
 | Loading a credential returns `400` | The credential is invalid, or `credentialSubject.id` is not your DID. | Check that HINQ issued it to the DID of your subject. |
 | TLS handshake fails on a FHIR request | The client certificate is missing or not issued under G1 or G4, or the G1 root is not trusted. | See [Step 5](#step-5-configure-mtls-for-fhir-requests). |
-| FHIR request returns `401` | The access token is missing, invalid or expired, or the DPoP proof is missing or invalid. | Request a new access token. Create a new proof for every request, with the exact method and the URL without query parameters. Send the token with the `DPoP` scheme, not `Bearer`. |
 | FHIR request returns `400` | The request does not follow the CapabilityStatement, for example an unlisted resource type or search parameter. | Check the request against [Dataset](dataset.html#requests). |
+| FHIR request returns `401` | The access token is missing, invalid or expired, or the DPoP proof is missing or invalid. | Request a new access token. Create a new proof for every request, with the exact method and the URL without query parameters. Send the token with the `DPoP` scheme, not `Bearer`. |
 | FHIR request returns `403` | Access is denied, for example because the patient has no consent or the BSN differs from the token. | Check that the token was requested for the same BSN. |
-| FHIR request returns `429` | Too many requests. | Wait for the time in the `Retry-After` header. |
+| FHIR request returns `429` | The data user sent too many requests. | Wait for the time in the `Retry-After` header. |
 | FHIR request returns `502`, `503` or `504` | A source system, the consent check or the HINQ ION service is not available. | Retry later. See [Errors](transactions.html#errors). |
 
 ### Going to Production
 
 For production, change the following:
 
-- Use the production values from [Values Used on This Page](#values-used-on-this-page).
-- Request new credentials from HINQ for the DID of your production subject. Credentials from
-  acceptance are not valid in production.
+- Use the production values from [Connection Details](#connection-details).
+- Request new credentials from HINQ for the DID of your production subject.
 - Use a production PKIoverheid client certificate. For the `X509Credential`, use a production UZI
   server certificate.
 - Test with real patients only after the acceptance tests have passed. There are no test patients in

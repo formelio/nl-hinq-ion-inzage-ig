@@ -1,4 +1,4 @@
-This volume contains the technical agreements for making HINQ ION data available. The content is
+This page contains the technical agreements for making HINQ ION data available. The content is
 adapted from the Zorginzage 2026 building blocks so that this guide is self-contained. The HINQ ION
 Inzage-specific choices are noted where they apply.
 
@@ -12,8 +12,7 @@ holder and receives or retrieves it. The pattern is described in the
 [Whitepaper Communicatiepatronen](https://www.datavoorgezondheid.nl/documenten/2025/07/14/whitepaper-communicatiepatronen-vws)
 of the Ministry of Health. This whitepaper is in Dutch.
 
-There is a single, known data holder, HINQ ION, and its endpoints are known up front. Every exchange
-in this pilot is therefore gericht bevragen on a patient the data user already has in context.
+Every exchange in this pilot is gericht bevragen on a patient the data user already has in context.
 
 #### Principles
 
@@ -31,7 +30,7 @@ A data exchange consists of the following steps:
    `HinqBsnCredential`. The token is bound to that patient. See
    [Identification and Authentication](#identification-and-authentication) and
    [HinqBsnCredential](#hinqbsncredential).
-2. **Patient search.** The data user searches the patient on BSN at the data holder to obtain the
+2. **Patient search.** The data user searches for the patient by BSN at the data holder to obtain the
    patient's technical identifier.
 3. **Data request.** The data user requests data using that patient's technical identifier.
 
@@ -43,9 +42,8 @@ The data holder performs three access checks. The details are in [Access Control
 | The access rules are met | | ✓ |
 | Explicit patient consent is present | | ✓ |
 
-Addressing is **not** a step in this pilot. The data user is assumed to already know the data
-holder's endpoints. See [Addressing](#addressing). The endpoints and other values a data user needs
-are listed in [Values Used on This Page](integration.html#values-used-on-this-page).
+The endpoints and other values a data user needs are listed in
+[Connection Details](integration.html#connection-details).
 
 ### Addressing
 
@@ -55,7 +53,7 @@ the data holder's endpoints**. The organization configures these endpoints as fi
 therefore no discovery step.
 
 There is a single known data holder, HINQ ION, and the number of participants is very small.
-Hosting a discovery service is therefore not worthwhile. It is sub-optimal and adds significant
+Hosting a discovery service is therefore not worthwhile. It is suboptimal and adds significant
 technical complexity for little benefit at this scale.
 
 ### Identification and Authentication
@@ -65,7 +63,8 @@ three levels:
 
 - Healthcare organizations are authenticated by their URA.
 - The identity of healthcare professionals is federated from the data user to the data holder.
-- Vendor organizations are authenticated at the transport layer with mTLS.
+- Vendor organizations are authenticated at the transport layer with mTLS. See
+  [Network Security](#network-security).
 
 Organization-level and professional-level authentication use the standard did:web-based Nuts
 processes.
@@ -82,20 +81,25 @@ verifies, issues and maintains them.
 |------------|---------|------------------|
 | **URA Credential** | The primary organization identifier. | ZorgAB |
 | **AGB Credential** | An extra existence and match check. It confirms that the care provider exists and corresponds to the organization. | Vektis |
-| **Zorgaanbiedertype Credential** | Expresses which types of healthcare organization the data user is. Its technical name is `HinqHealthcareProviderRoleTypeCredential`. The data holder needs it for the consent check. | OrganisatieTypeCodelijst |
+| **Zorgaanbiedertype Credential** | Expresses which type of healthcare organization the data user is. Its technical name is `HinqHealthcareProviderRoleTypeCredential`. The data holder needs it for the consent check. | OrganisatieTypeCodelijst |
 | **X509Credential** | A standard Nuts credential that represents the organization's UZI server certificate. The organization issues it to itself through a `did:x509` DID. It carries the URA from the certificate. HINQ does not issue it. | The UZI certificate chain |
 
-An organization that already has an `X509Credential` MAY present it instead of the URA Credential
+An organization that already has an `X509Credential` **MAY** present it instead of the URA Credential
 and the AGB Credential. The Zorgaanbiedertype Credential is always required. Filtering the data by
-organization type is future work and is not defined in this version. Support for the
-`X509Credential` was added in Nuts node v6.1.
+organization type is future work and is not defined in this version.
 
 ##### Why HINQ Acts as Issuer
 
-There is no authoritative issuer yet for these credentials. HINQ therefore performs the checks and
-issues them for the pilot. The role is handed over once an authoritative alternative exists.
-[Credentials & Issuance](credentials.html) describes the full rationale. It also describes how an
-organization obtains the credentials and how validity, rechecks and revocation work.
+There is no authoritative national issuer for these credentials today. The URA can be derived from a
+UZI server certificate, but every vendor then has to obtain and manage its own certificate. For the
+Zorgaanbiedertype, there is no issuer at all. HINQ therefore performs the checks and issues the
+credentials for the pilot. As a non-profit care cooperation, it already performs these checks for
+several hundred organizations across various care sectors. The role is handed over once an
+authoritative alternative exists. Each credential is kept separate, so the switch can be made per
+credential.
+
+[Credentials & Issuance](credentials.html) describes how an organization obtains the credentials and
+how validity, renewal and revocation work.
 
 #### Healthcare Professional
 
@@ -124,7 +128,7 @@ not depend on national initiatives such as Dezi, which are not yet in place.
 There is explicitly no HTML challenge or pop-up. This differs from the previous Nuts v5 employee
 identity means, described in
 [RFC019](https://nuts-foundation.gitbook.io/drafts/rfc/rfc019-employee-identity-means). That approach
-hosted a web page for the professional to confirm their details. Under the self-attested model the
+hosted a web page for the professional to confirm their details. Under the self-attested model, the
 data user is trusted to have authenticated the professional and checked the supplied fields.
 
 The data user passes the credential directly in the `request-service-access-token` call. See
@@ -134,11 +138,6 @@ request/response shape and API details are in the Nuts node
 [auth v2 API documentation](https://nuts-node.readthedocs.io/en/stable/pages/integrating/api.html)
 and on the [Requesting Access](https://wiki.nuts.nl/books/implementing-a-nuts-use-case/page/requesting-access-outbound)
 wiki page.
-
-#### Vendor Organization
-
-Vendor organizations are not identified by a business identifier. They are authenticated at the
-transport layer through mTLS. See [Network Security](#network-security).
 
 ### Access Control
 
@@ -151,7 +150,7 @@ Access is gated in two places: at the token request and at the data request.
 #### Token Request
 
 The data user requests the access token from its own Nuts node. The access-token request contains
-the organization credentials, a `NutsEmployeeCredential` and a `HinqBsnCredential`. Together they
+the organization credentials, a `NutsEmployeeCredential` and a `HinqBsnCredential`. Together, they
 identify the requesting organization, the healthcare professional and the patient.
 
 A *presentation definition* bound to the `ion_inzage` scope demands these credentials. The data
@@ -173,7 +172,8 @@ repository. The data holder loads it into its Nuts node.
 
 The data user must present the [required credentials](#required-credentials). Their fields are
 described in [Credentials & Issuance](credentials.html#credential-specifications). When the PDP
-introspects the token, it gets the URA, the AGB and the Zorgaanbiedertype back. The PDP uses the URA
+introspects the token, it gets the URA and the Zorgaanbiedertype back. With the HINQ-issued
+credentials, it also gets the AGB. The PDP uses the URA
 and the Zorgaanbiedertype for the consent check. See [Consent](#consent).
 
 ##### NutsEmployeeCredential
@@ -185,8 +185,6 @@ is needed and how the data user fills it.
 When the PDP introspects the token, it gets the professional's identifier, name and role back. The
 PDP uses the identifier for the consent check. See [Consent](#consent). The data holder records the
 identifier, name and role in its audit log.
-
-- The access-token request **MUST** include a `NutsEmployeeCredential`.
 
 ##### HinqBsnCredential
 
@@ -214,11 +212,7 @@ for the following reasons:
 
 The `HinqBsnCredential` is self-attested. The data holder trusts the data user to provide the correct
 BSN. The data holder still checks consent for this patient, data user and professional. See
-[Consent](#consent).
-
-- The data user **MUST** request a separate access token for every patient.
-- The data user **MUST** include a `HinqBsnCredential` with the patient's BSN in the access-token
-  request.
+[Consent](#consent). The rules for the data user are listed in [Conformance](#conformance).
 
 #### Data Request
 

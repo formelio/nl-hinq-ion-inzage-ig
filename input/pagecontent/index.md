@@ -2,11 +2,11 @@
 
 This implementation guide describes the agreements and specifications for making **HINQ ION** data
 available to requesting parties in a generic, reusable way. It lets a data user retrieve the data
-that HINQ ION makes available on behalf of a source system, in a secure and auditable way. The data
-user is a care provider with a treatment relationship with the patient.
+that HINQ ION makes available on behalf of source healthcare organizations, in a secure and
+auditable way. The data user is a care provider with a treatment relationship with the patient.
 
-In this pilot stage the source system is **Medicom** and the data users are the **Rivo-Noord**
-region viewers. The longer-term ambition is for this guide to serve as a generic specification for
+In this pilot stage, the source system is **Medicom**, a huisartsinformatiesysteem, and the data
+users are the **Rivo-Noord** region viewers. The data is huisarts data. See [Dataset](dataset.html). The longer-term ambition is for this guide to serve as a generic specification for
 exposing HINQ ION data to requesting parties. It is harmonized with the other generic Nuts
 specifications, Zorginzage and 360°-graden, and is largely derived from them.
 
@@ -15,14 +15,15 @@ specifications, Zorginzage and 360°-graden, and is largely derived from them.
 This guide is a proposition for a production-grade pilot on a relatively small scale: a select set
 of organizations exchanging Medicom data with the Rivo-Noord viewers. It is a plan for what can be
 piloted with the building blocks available today. There is no commitment to use it, to bring it
-live, or to follow the Zorginzage governance, release schedule or planning. The architectural choices are made for what is
-practical and usable for this pilot, which is why the guide is versioned below 1.0. The
-guiding principle is to reuse the building blocks that already exist.
+live, or to follow the Zorginzage governance, release schedule or planning. The architectural
+choices are made for what is practical and usable for this pilot, which is why the guide is
+versioned below 1.0. The current version is 0.2.0. The changes per version are listed in
+[History](changes.html). The guiding principle is to reuse the building blocks that already exist.
 
-> **Versioning rule.** This specification is dimensioned for a small pilot. Several choices are
+> **Versioning rule.** This specification is sized for a small pilot. Several choices are
 > deliberate pilot simplifications and are expected to change as the scope grows. Addressing is out
-> of scope, so the endpoints are configured instead of discovered. The URA and AGB credentials are
-> issued by HINQ instead of a national authority. When the pilot grows beyond a handful of
+> of scope, so the endpoints are configured instead of discovered. The URA, AGB and Zorgaanbiedertype
+> credentials are issued by HINQ instead of by a national authority. When the pilot grows beyond a handful of
 > organizations, or when a national URA issuer becomes available, a new version is created to adopt
 > it.
 
@@ -46,14 +47,31 @@ this pilot deviates from Zorginzage, the deviation is stated explicitly. The dev
   this specification, each token is also bound to one patient through the `HinqBsnCredential`. See
   [HinqBsnCredential](exchange.html#hinqbsncredential).
 
+### Key Technical Choices
+
+- **Nuts v6.** Organizations are authenticated with did:web and Verifiable Credentials. The data user
+  gets an access token for the `ion_inzage` scope from HINQ's Nuts node. See
+  [Access Control](exchange.html#access-control).
+- **Patient-bound DPoP tokens.** Every access token is bound to one patient and to a key of the data
+  user. The data user sends a new DPoP proof with every request. See
+  [DPoP Proof](transactions.html#dpop-proof).
+- **Consent.** The data holder checks the patient's consent at every request. See
+  [Consent](exchange.html#consent).
+- **FHIR R4.** The data user searches for the patient by BSN and then requests the patient's data.
+  The allowed requests are listed in the
+  [CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html).
+- **Mutual TLS.** The FHIR requests use mutual TLS with PKIoverheid certificates. See
+  [Network Security](exchange.html#network-security).
+
 ### HINQ as Credential Issuer
 
-To keep onboarding short in this pilot, HINQ acts as the issuer for the Verifiable Credentials used
-to authenticate organizations and to satisfy source-system consent checks. This avoids blocking on
-slower-moving national identity infrastructure. See
-[Authentication](exchange.html#healthcare-organization) for the credential set.
+To keep onboarding short in this pilot, HINQ acts as the issuer of the URA, AGB and Zorgaanbiedertype
+credentials. They authenticate the data user's organization and provide the details for the consent
+check. This avoids blocking on slower-moving national identity infrastructure. An organization with
+a UZI server certificate can use an `X509Credential` instead of the URA and AGB credentials. See
+[Healthcare Organization](exchange.html#healthcare-organization) for the credential set.
 
-### Participating Parties and Roles (Pilot)
+### Participating Parties and Roles
 
 The use case has two roles:
 
@@ -73,8 +91,6 @@ There is no mandatory reciprocity. A participant does not have to implement both
 
 HINQ is the owner of this specification and the trusted issuer of the organization credentials.
 
-Addressing is out of scope for this pilot. See [Addressing](exchange.html#addressing).
-
 ### Organization of This Guide
 
 - [Exchange Architecture](exchange.html): the technical agreements. These are the exchange pattern,
@@ -88,8 +104,10 @@ Addressing is out of scope for this pilot. See [Addressing](exchange.html#addres
   with the configuration and test requests.
 - [Dataset](dataset.html): the huisarts data that is made available, and the request for each data
   element.
-- [CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html): the machine-readable list of
-  the requests the data holder supports.
+- [Artifacts](artifacts.html): the conformance resources and examples of this guide. These are the
+  [CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html), the machine-readable list of
+  the requests the data holder supports, and an illustrative example Patient.
+- [History](changes.html): the changes per version.
 
 ### Support
 

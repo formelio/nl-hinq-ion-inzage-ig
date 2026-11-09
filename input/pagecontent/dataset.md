@@ -1,6 +1,8 @@
 This page describes the data that a data user can retrieve, and the request for each data element.
 How the requests are authorized is described in [Exchange Architecture](exchange.html). Example
-requests and responses are in [Transactions](transactions.html).
+requests and responses are in [Transactions](transactions.html). The
+[CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html) lists all allowed requests in a
+machine-readable form.
 
 ### Overview
 
@@ -64,7 +66,7 @@ The patient search returns the patient. With `_include=Patient:general-practitio
 returns the huisarts and the huisartsenpraktijk that `Patient.generalPractitioner` references:
 
 ```http
-POST {fhir_base}/Patient/_search
+POST {fhir_base}/Patient/_search HTTP/1.1
 Content-Type: application/x-www-form-urlencoded
 
 identifier=http://fhir.nl/fhir/NamingSystem/bsn|{bsn}&_include=Patient:general-practitioner

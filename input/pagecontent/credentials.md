@@ -1,5 +1,5 @@
-This volume specifies the credentials of this use case technically. It covers the credential
-types, their fields, how HINQ issues the organization credentials and how they are kept up to date.
+This page contains the technical specification of the credentials of this use case. It covers the
+credential types, their fields, how HINQ issues the organization credentials and how they are kept up to date.
 Where the credentials are used is described in
 [Identification and Authentication](exchange.html#identification-and-authentication).
 
@@ -80,13 +80,13 @@ The URA, AGB and Zorgaanbiedertype Credentials share the following specification
 
 #### URA Credential
 
-The URA Credential carries the URA-number of the data user's organization. The URA is the primary
+The URA Credential carries the URA number of the data user's organization. The URA is the primary
 organization identifier in this use case.
 
 | Field | Value |
 |-------|-------|
 | `type` | `HinqUraCredential` |
-| `credentialSubject.organization.ura` | The URA-number of the organization |
+| `credentialSubject.organization.ura` | The URA number of the organization |
 | HINQ verifies against | ZorgAB |
 
 URA stands for UZI-Register Abonneenummer. Its OID is `2.16.528.1.1007.3.3`. The URA is used as the
@@ -95,7 +95,7 @@ organization identifier for the following reasons:
 - Identification by URA conforms to the national information model for healthcare organizations.
   This model is the Zorginformatiebouwsteen Zorgaanbieder, published on
   [zibs.nl](https://zibs.nl/wiki/Zorgaanbieder-v3.6(2024NL)).
-- The URA-number is issued by a public organization, the CIBG.
+- The URA number is issued by a public organization, the CIBG.
 
 See the complete example in [Credential Specifications](#credential-specifications).
 
@@ -111,11 +111,13 @@ and match check. It confirms that the care provider exists and corresponds to th
 | HINQ verifies against | Vektis |
 
 ```json
-"type": ["VerifiableCredential", "HinqAgbCredential"],
-"credentialSubject": {
-  "id": "did:web:example.vendor.nl:iam:organization-a",
-  "organization": {
-    "agb": "01234567"
+{
+  "type": ["VerifiableCredential", "HinqAgbCredential"],
+  "credentialSubject": {
+    "id": "did:web:example.vendor.nl:iam:organization-a",
+    "organization": {
+      "agb": "01234567"
+    }
   }
 }
 ```
@@ -139,10 +141,12 @@ is `2.16.840.1.113883.2.4.15.1060`. Examples are `Z3` for a huisartspraktijk and
 ziekenhuis.
 
 ```json
-"type": ["VerifiableCredential", "HinqHealthcareProviderRoleTypeCredential"],
-"credentialSubject": {
-  "id": "did:web:example.vendor.nl:iam:organization-a",
-  "roleCodeNL": "Z3"
+{
+  "type": ["VerifiableCredential", "HinqHealthcareProviderRoleTypeCredential"],
+  "credentialSubject": {
+    "id": "did:web:example.vendor.nl:iam:organization-a",
+    "roleCodeNL": "Z3"
+  }
 }
 ```
 
@@ -166,20 +170,22 @@ The credential differs from the HINQ-issued credentials in the following ways:
   from the `otherName` field of the certificate's subject alternative name.
 - **Validity.** The credential cannot be valid longer than the certificate.
 - **Precedence.** A data user can hold both an `X509Credential` and the URA and AGB Credentials. In
-  that case the `X509Credential` is presented, and the data holder uses the URA from the
+  that case, the `X509Credential` is presented, and the data holder uses the URA from the
   `X509Credential`.
 
 The following example shows the `credentialSubject` of the decoded JWT:
 
 ```json
-"credentialSubject": {
-  "id": "did:web:example.vendor.nl:iam:organization-a",
-  "subject": {
-    "O": "Huisartsenpraktijk Voorbeeld",
-    "L": "Groningen"
-  },
-  "san": {
-    "otherName": "<otherName value of the UZI server certificate>"
+{
+  "credentialSubject": {
+    "id": "did:web:example.vendor.nl:iam:organization-a",
+    "subject": {
+      "O": "Huisartsenpraktijk Voorbeeld",
+      "L": "Groningen"
+    },
+    "san": {
+      "otherName": "<otherName value of the UZI server certificate>"
+    }
   }
 }
 ```
@@ -209,11 +215,13 @@ credential is needed is described in [Healthcare Professional](exchange.html#hea
 | `credentialSubject.roleName` | The role of the professional |
 
 ```json
-"type": ["VerifiableCredential", "NutsEmployeeCredential"],
-"credentialSubject": {
-  "identifier": "j.doe@example.nl",
-  "name": "John Doe",
-  "roleName": "Nurse"
+{
+  "type": ["VerifiableCredential", "NutsEmployeeCredential"],
+  "credentialSubject": {
+    "identifier": "j.doe@example.nl",
+    "name": "John Doe",
+    "roleName": "Nurse"
+  }
 }
 ```
 
@@ -231,9 +239,11 @@ The data user's system self-attests it. Why the token is bound to a patient is d
 | `credentialSubject.bsn` | The BSN of the patient |
 
 ```json
-"type": ["VerifiableCredential", "HinqBsnCredential"],
-"credentialSubject": {
-  "bsn": "123456782"
+{
+  "type": ["VerifiableCredential", "HinqBsnCredential"],
+  "credentialSubject": {
+    "bsn": "123456782"
+  }
 }
 ```
 
@@ -273,7 +283,7 @@ is configured for. There are two configuration options under `jsonld.contexts`:
 A file in `localmapping` is loaded at startup. The node does not start when the file is missing.
 Until HINQ publishes the context at its URL, `localmapping` is the only option that works. The
 configuration of both options is shown in
-[Step 1](integration.html#step-1-configure-the-nuts-node).
+[Configure the Nuts Node](integration.html#step-1-configure-the-nuts-node).
 
 Setting either list replaces its default entries. The default entries **MUST** therefore be repeated
 in the configuration. Otherwise the node can no longer process other credentials. The defaults are
@@ -292,7 +302,9 @@ This section applies to the HINQ-issued organization credentials.
 Issuance in this pilot is a deliberately simple, manual process. It stays that way while no
 automated, authoritative issuer exists.
 
-1. The data user sends HINQ the **DID** of the organization it requests credentials for.
+1. The data user sends HINQ the URA, the AGB code and the organization type of the organization,
+   and the **DID** it requests the credentials for. How to send them is described in
+   [Obtain the Organization Credentials](integration.html#step-3-obtain-the-organization-credentials).
 2. HINQ checks the URA against ZorgAB, the AGB against Vektis and the Zorgaanbiedertype against the
    OrganisatieTypeCodelijst.
 3. HINQ issues the credentials to that DID. Its Nuts node issues each credential with an
@@ -348,16 +360,6 @@ reporting changes to HINQ**. Examples are:
 - The organization merges with or is acquired by another organization.
 - The URA, the AGB or the organization type changes.
 
-On such a report HINQ revokes the affected credentials. Where applicable, it issues new ones.
+On such a report, HINQ revokes the affected credentials. Where applicable, it issues new ones.
 
 Where the pilot governance requires a credential to be revoked, HINQ revokes it on a formal request.
-
-### Why HINQ Acts as Issuer
-
-There is no authoritative national issuer for these credentials today. The URA can be derived from a
-UZI server certificate, but every vendor then has to obtain and manage its own certificate. For the
-Zorgaanbiedertype there is no issuer at all. HINQ therefore performs the checks and issues the
-credentials for the pilot. As a non-profit care cooperation, it already performs these checks for
-several hundred organizations across various care sectors. The role is handed over once an
-authoritative alternative exists. Each credential is kept separate, so the switch can be made per
-credential.

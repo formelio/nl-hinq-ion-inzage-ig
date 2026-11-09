@@ -2,6 +2,14 @@ This page shows the interactions between the data user and the data holder, with
 request and response. Why these interactions are needed is described in
 [Exchange Architecture](exchange.html).
 
+The examples use the following placeholders:
+
+- `{nuts_internal}` is the internal interface of a Nuts node. The data user calls its own node. The
+  data holder's PDP calls the data holder's node.
+- `{subject_id}` is the subject of the data user's organization on its Nuts node.
+- `{fhir_base}` is HINQ's FHIR base URL. The values are listed in
+  [Connection Details](integration.html#connection-details).
+
 ### Overview
 
 The sequence diagram shows a data user retrieving data for one patient.
@@ -28,7 +36,7 @@ The interaction has four steps:
 2. **[Access Token Request](#access-token-request).** The data user requests an access token for one
    patient. The data user knows the data holder's endpoints up front. See
    [Addressing](exchange.html#addressing).
-3. **[Patient Search](#patient-search).** The data user searches the patient on BSN to get the
+3. **[Patient Search](#patient-search).** The data user searches for the patient by BSN to get the
    patient's logical id at the data holder.
 4. **[Data Request](#data-request).** The data user requests the patient's data with that logical id.
 
@@ -47,7 +55,7 @@ request body.
 **Request**
 
 ```http
-POST <internal Nuts interface>/internal/auth/v2/<subjectID>/request-service-access-token
+POST {nuts_internal}/internal/auth/v2/{subject_id}/request-service-access-token HTTP/1.1
 Content-Type: application/json
 
 {
@@ -110,12 +118,12 @@ Content-Type: application/json
 
 The access token is bound to a key of the data user's subject. Before every FHIR request, the data
 user asks its own Nuts node for a DPoP proof. The proof is valid for one request: one HTTP method
-and one URL. The `kid` in the path is the `dpop_kid` from the token response, URL-encoded.
+and one URL. `{dpop_kid}` in the path is the `dpop_kid` from the token response, URL-encoded.
 
 **Request**
 
 ```http
-POST <internal Nuts interface>/internal/auth/v2/dpop/<URL-encoded dpop_kid>
+POST {nuts_internal}/internal/auth/v2/dpop/{dpop_kid} HTTP/1.1
 Content-Type: application/json
 
 {
@@ -153,7 +161,7 @@ defines. The PDP uses them for the access rules and the consent check.
 **Request**
 
 ```http
-POST <internal Nuts interface>/internal/auth/v2/accesstoken/introspect
+POST {nuts_internal}/internal/auth/v2/accesstoken/introspect HTTP/1.1
 Content-Type: application/x-www-form-urlencoded
 
 token=<access token>
@@ -187,7 +195,7 @@ Content-Type: application/json
 ```
 
 The example shows the claims for the HINQ-issued credentials. With an `X509Credential`, the response
-has `organization_name` and `organization_city` but it is missing `organization_agb`. The Nuts node also
+has `organization_name` and `organization_city`, but not `organization_agb`. The Nuts node also
 returns the presented credentials. They are left out of the example.
 
 The `cnf.jkt` claim is the thumbprint of the key the access token is bound to. The PDP **MUST**
@@ -199,7 +207,7 @@ After the introspection, the PDP validates the DPoP proof of the request at the 
 node:
 
 ```http
-POST <internal Nuts interface>/internal/auth/v2/dpop/validate
+POST {nuts_internal}/internal/auth/v2/dpop/validate HTTP/1.1
 Content-Type: application/json
 
 {
@@ -226,7 +234,7 @@ proxy rewrote. When the proof is invalid, the response has `"valid": false` and 
 
 ### Patient Search
 
-The data user searches the patient on BSN. The result gives the patient's logical id at the data
+The data user searches for the patient by BSN. The result gives the patient's logical id at the data
 holder.
 
 **Rules**
@@ -239,7 +247,7 @@ holder.
 **Request**
 
 ```http
-POST {fhir_base}/Patient/_search
+POST {fhir_base}/Patient/_search HTTP/1.1
 Authorization: DPoP <access token>
 DPoP: <DPoP proof>
 Content-Type: application/x-www-form-urlencoded
@@ -301,7 +309,7 @@ access token for all requests for this patient. It creates a new DPoP proof for 
 patient's observations.
 
 ```http
-GET {fhir_base}/Observation?patient=patient-123
+GET {fhir_base}/Observation?patient=patient-123 HTTP/1.1
 Authorization: DPoP <access token>
 DPoP: <DPoP proof>
 Accept: application/fhir+json
@@ -360,8 +368,8 @@ Content-Type: application/fhir+json
 
 ### Paging
 
-The data holder **MAY** return the results of a search in pages. A page is a Bundle with a link with
-relation `next`:
+The data holder **MAY** return the results of a search in pages. A page is a Bundle with a link of the
+relation type `next`:
 
 ```json
 "link": [
