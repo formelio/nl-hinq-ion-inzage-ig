@@ -1,80 +1,113 @@
 ### Overview
 
 This implementation guide describes the agreements and specifications for making **HINQ ION** data
-available to requesting parties in a generic, reusable way. It lets a data user — a care provider
-with a treatment relationship — retrieve, in a secure and auditable way, the data that the HINQ ION
-makes available on behalf of a source system.
+available to requesting parties in a generic, reusable way. It lets a data user retrieve the data
+that HINQ ION makes available on behalf of source healthcare organizations, in a secure and
+auditable way. The data user is a care provider with a treatment relationship with the patient.
 
-In this pilot stage the source system is **Medicom** and the data users are the **Rivo-Noord**
-region viewers. The longer-term ambition is for this guide to serve as a generic specification for
-exposing HINQ ION data to requesting parties, harmonised with — and largely derived from — the
-other generic Nuts specifications (Zorginzage and 360°-graden).
+In this pilot stage, the source system is **Medicom**, a huisartsinformatiesysteem, and the data
+users are the **Rivo-Noord** region viewers. The data is huisarts data. See [Dataset](dataset.html). The longer-term ambition is for this guide to serve as a generic specification for
+exposing HINQ ION data to requesting parties. It is harmonized with the other generic Nuts
+specifications, Zorginzage and 360°-graden, and is largely derived from them.
 
-### Status and scope
+### Status and Scope
 
 This guide is a proposition for a production-grade pilot on a relatively small scale: a select set
-of organisations exchanging Medicom data with the Rivo-Noord viewers. It is a plan for what could be
-piloted now, as of June 2026. There is no commitment to use it, to bring it live, or to follow the
-Zorginzage governance, release schedule or planning. The architectural choices are made for what is
-practical and usable for this pilot, which is why the guide is versioned 0.1.0 rather than 1.0. The
-guiding principle is to reuse the building blocks that already exist.
+of organizations exchanging Medicom data with the Rivo-Noord viewers. It is a plan for what can be
+piloted with the building blocks available today. There is no commitment to use it, to bring it
+live, or to follow the Zorginzage governance, release schedule or planning. The architectural
+choices are made for what is practical and usable for this pilot, which is why the guide is
+versioned below 1.0. The current version is 0.2.0. The changes per version are listed in
+[History](changes.html). The guiding principle is to reuse the building blocks that already exist.
 
-> Versioning rule. This specification is dimensioned for a small pilot. Several choices below are
-> deliberate pilot simplifications and are expected to change as the scope grows: addressing is out
-> of scope (endpoints are hardcoded rather than discovered), requesting parties are individually
-> whitelisted at the source, and organisation credentials (URA, AGB) are issued by HINQ rather than
-> by a national authority. When the pilot grows beyond a handful of organisations, or when the
-> generic functions (addressing, a national URA issuer) become available, a new
-> version is created to adopt them.
+> **Versioning rule.** This specification is sized for a small pilot. Several choices are
+> deliberate pilot simplifications and are expected to change as the scope grows. Addressing is out
+> of scope, so the endpoints are configured instead of discovered. The URA, AGB and Zorgaanbiedertype
+> credentials are issued by HINQ instead of by a national authority. When the pilot grows beyond a handful of
+> organizations, or when a national URA issuer becomes available, a new version is created to adopt
+> it.
 
-### Relationship to the Zorginzage specification
+### Relationship to the Zorginzage Specification
 
 This guide reuses building blocks from the [Zorginzage 2026
 template](https://nuts-foundation.github.io/nl-zorginzage-ig/). The relevant content is copied into
 this guide so that the HINQ ION Inzage specification is self-contained and does not change when the
-Zorginzage specification evolves. Only the technical building blocks are taken over; the Zorginzage
+Zorginzage specification evolves. Only the technical building blocks are taken over. The Zorginzage
 governance, reciprocity, commitment, roadmap and release-policy chapters are out of scope. Where
-this pilot deviates from Zorginzage — most notably on addressing and organisation authentication —
-the deviation is stated explicitly.
+this pilot deviates from Zorginzage, the deviation is stated explicitly. The deviations are:
 
-### Release-time-based components
+- **Addressing is out of scope.** The data user knows the data holder's endpoints up front. See
+  [Addressing](exchange.html#addressing).
+- **Only gericht bevragen.** There is a single known data holder. See
+  [Exchange Pattern](exchange.html#exchange-pattern-gericht-bevragen).
+- **HINQ-issued organization credentials.** HINQ issues the URA, AGB and Zorgaanbiedertype
+  credentials. An `X509Credential` from a UZI server certificate is accepted as an alternative. See
+  [Healthcare Organization](exchange.html#healthcare-organization).
+- **Patient-bound access tokens.** In Zorginzage, an access token is bound to one organization. In
+  this specification, each token is also bound to one patient through the `HinqBsnCredential`. See
+  [HinqBsnCredential](exchange.html#hinqbsncredential).
 
-Some components name a preferred end-state option together with the pragmatic choice the pilot makes
-while the preferred option is not yet available. This lets the pilot start with available technology
-while staying ready to adopt the preferred generic functions as they mature. The pattern applies to
-[addressing](exchange.html#addressing) (end-state: Generieke Functie Adressering).
+### Key Technical Choices
 
-### HINQ as credential issuer
+- **Nuts v6.** Organizations are authenticated with did:web and Verifiable Credentials. The data user
+  gets an access token for the `ion_inzage` scope from HINQ's Nuts node. See
+  [Access Control](exchange.html#access-control).
+- **Patient-bound DPoP tokens.** Every access token is bound to one patient and to a key of the data
+  user. The data user sends a new DPoP proof with every request. See
+  [DPoP Proof](transactions.html#dpop-proof).
+- **Consent.** The data holder checks the patient's consent at every request. See
+  [Consent](exchange.html#consent).
+- **FHIR R4.** The data user searches for the patient by BSN and then requests the patient's data.
+  The allowed requests are listed in the
+  [CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html).
+- **Mutual TLS.** The FHIR requests use mutual TLS with PKIoverheid certificates. See
+  [Network Security](exchange.html#network-security).
 
-To keep onboarding short in this pilot, HINQ acts as the issuer for the Verifiable Credentials used
-to authenticate organisations and to satisfy source-system consent checks. This avoids blocking on
-slower-moving national identity infrastructure. See
-[Authentication](exchange.html#authentication-organisation-identity) for the credential set.
+### HINQ as Credential Issuer
 
-### Participating parties and roles (pilot)
+To keep onboarding short in this pilot, HINQ acts as the issuer of the URA, AGB and Zorgaanbiedertype
+credentials. They authenticate the data user's organization and provide the details for the consent
+check. This avoids blocking on slower-moving national identity infrastructure. An organization with
+a UZI server certificate can use an `X509Credential` instead of the URA and AGB credentials. See
+[Healthcare Organization](exchange.html#healthcare-organization) for the credential set.
 
-The two roles are vastleggen / beschikbaarstellen (record and make available — the data holder) and
-raadplegen / tonen (consult and display — the data user). See [Use Case & Roles](functional.html)
-for the role definitions.
+### Participating Parties and Roles
 
-| Party | Vastleggen / beschikbaarstellen (data holder) | Raadplegen / tonen (data user) |
+The use case has two roles:
+
+- **Data holder.** Vastleggen / beschikbaarstellen, which means record and make available. After
+  authentication and authorization, HINQ ION makes the data of the source system available to a data
+  user.
+- **Data user.** Raadplegen / tonen, which means consult and display. The data user requests the
+  data from HINQ ION and displays it to the healthcare professional. In this pilot, the data user is
+  a Rivo-Noord viewer.
+
+There is no mandatory reciprocity. A participant does not have to implement both roles.
+
+| Party | Data holder | Data user |
 |-------|:--:|:--:|
 | HINQ ION (Medicom source data) | ✓ |   |
 | Rivo-Noord region viewer(s)     |   | ✓ |
 
-Addressing is out of scope for this pilot (see [Exchange Architecture](exchange.html)).
+HINQ is the owner of this specification and the trusted issuer of the organization credentials.
 
-### Organisation of this guide
+### Organization of This Guide
 
-- [Use Case & Roles](functional.html) — functional overview, the participating parties and their
-  roles, and the functional flows (in Dutch).
-- [Exchange Architecture](exchange.html) — the technical agreements: exchange patterns,
-  identification, authentication, addressing, authorisation, consent and network
-  security (in English).
-- [Credentials & Issuance](credentials.html) — the organisation credentials, how HINQ issues them,
-  and the validity/recheck/revocation flows (in English).
-- [Transactions](transactions.html) — the individual transactions of the pull flow (in English).
-- [Dataset](dataset.html) — the data exposed in this pilot (in English).
+- [Exchange Architecture](exchange.html): the technical agreements. These are the exchange pattern,
+  identification, authentication, addressing, access control, consent and network security.
+- [Credentials & Issuance](credentials.html): the credentials, how HINQ issues the organization
+  credentials, and their validity, renewal and revocation.
+- [Transactions](transactions.html): the sequence diagram of the interactions, and example requests
+  and responses for the access token, the DPoP proof, the patient search, the data request, paging
+  and errors.
+- [Integration](integration.html): the environments and the steps a data user follows to connect,
+  with the configuration and test requests.
+- [Dataset](dataset.html): the huisarts data that is made available, and the request for each data
+  element.
+- [Artifacts](artifacts.html): the conformance resources and examples of this guide. These are the
+  [CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html), the machine-readable list of
+  the requests the data holder supports, and an illustrative example Patient.
+- [History](changes.html): the changes per version.
 
 ### Support
 

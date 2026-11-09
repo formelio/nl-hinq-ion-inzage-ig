@@ -7,5 +7,5 @@ ig:
 		-v ./output:/app/output \
 		-v ./ig.ini:/app/ig.ini \
 		-v ./sushi-config.yaml:/app/sushi-config.yaml \
-		-v ./build-cache:/app/input-cache \
+		-v ./build-cache:/root/.fhir \
 		ig-builder

@@ -9,9 +9,9 @@ url: https://formelio.github.io/nl-hinq-ion-inzage-ig/ImplementationGuide/fhir.n
 name: HINQIONInzageIG
 title: Netherlands - HINQ ION Inzage Implementation Guide
 language: en-US
-description: Self-contained implementation guide for making HINQ ION data available to requesting parties. In this pilot stage it exposes Medicom data to a select set of organisations (the Rivo-Noord region viewers). Reuses building blocks from the Zorginzage 2026 template.
+description: Self-contained implementation guide for making HINQ ION data available to requesting parties over Nuts. In this pilot stage, it exposes huisarts data from Medicom to the Rivo-Noord region viewers. It reuses building blocks from the Zorginzage 2026 template.
 status: draft # draft | active | retired | unknown
-version: 0.1.0
+version: 0.2.0
 fhirVersion: 4.0.1 # https://www.hl7.org/fhir/valueset-FHIR-version.html
 copyrightYear: 2026+
 releaseLabel: draft # ci-build | draft | qa-preview | ballot | trial-use | release | update | normative+trial-use
@@ -32,17 +32,17 @@ dependencies:
 pages:
   index.md:
     title: Home
-  functional.md:
-    title: Use Case & Roles
   exchange.md:
     title: Exchange Architecture
   credentials.md:
     title: Credentials & Issuance
   transactions.md:
     title: Transactions
+  integration.md:
+    title: Integration
   dataset.md:
     title: Dataset
-  history.md:
+  changes.md:
     title: History
 
 # The parameters property represents IG.definition.parameter.
@@ -56,12 +56,13 @@ parameters:
 # ╰────────────────────────────────────────────────────────────────────────────────────────────────╯
 menu:
   Home: index.html
-  Use Case & Roles: functional.html
   Exchange Architecture: exchange.html
   Credentials & Issuance: credentials.html
   Transactions: transactions.html
+  Integration: integration.html
   Dataset: dataset.html
-  History: history.html
+  Artifacts: artifacts.html
+  History: changes.html
 
 # ╭──────────────────────────────────────────SUSHI flags───────────────────────────────────────────╮
 # │  The flags below configure aspects of how SUSHI processes FSH.                                 │

@@ -3,13 +3,14 @@ Instance: PatientExample
 InstanceOf: http://nictiz.nl/fhir/StructureDefinition/nl-core-Patient
 Usage: #example
 Title: "Patient Example - Maria van den Berg"
-Description: "Example patient with BSN identifier, used to illustrate the BSN-based Patient search in the HINQ ION Inzage pull flow"
+Description: "Illustrative example of a patient with a BSN identifier, as found by the BSN-based Patient search. Patients returned by the data holder are converted from STU3 and do not necessarily conform to nl-core-Patient or contain all elements of this example."
 
 * identifier[bsn].use = #official
 * identifier[bsn].system = "http://fhir.nl/fhir/NamingSystem/bsn"
-* identifier[bsn].value = "123456789"
+* identifier[bsn].value = "123456782"
 
 * name.use = #official
+* name.text = "Maria Anna van den Berg"
 * name.family = "van den Berg"
 // nl-core-NameInformation requires each given part to carry the iso21090-EN-qualifier
 // extension (BR = given name, IN = initial).
