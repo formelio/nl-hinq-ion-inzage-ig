@@ -1,4 +1,4 @@
-# `ion_inzage` Policy for Nuts Node
+# `ion_inzage` Policy for the Nuts Node
 
 This directory contains the policy files that a HINQ ION Inzage **data holder** loads into its Nuts
 node through the `policy.directory` configuration key. They are the technical counterpart of the
@@ -21,8 +21,8 @@ Each environment has its own directory because the Nuts node loads every `*.json
 
 ## `ion_inzage.json`
 
-Maps the OAuth2 scope `ion_inzage` to a presentation definition in the `organization` profile, with
-`scope_policy: profile-only`. The presentation definition says which Verifiable Credentials the data
+The file maps the OAuth2 scope `ion_inzage` to a presentation definition in the `organization`
+profile, with `scope_policy: profile-only`. The presentation definition says which Verifiable Credentials the data
 user must present to get an access token.
 
 ### Required Credentials
@@ -38,7 +38,7 @@ The input descriptors are grouped, and two `submission_requirements` combine the
 The `uzi` group is listed first in `from_nested`. When the data user's wallet satisfies both groups,
 the Nuts node picks the first one, so the `X509Credential` is presented.
 
-The `NutsEmployeeCredential` and `HinqBsnCredential` are self-attested by the data user. They are
+The `NutsEmployeeCredential` and the `HinqBsnCredential` are self-attested by the data user. They are
 matched in the `organization` profile, in line with existing production policies.
 
 ### Formats

@@ -1,9 +1,9 @@
 # JSON-LD Context for HINQ Credentials
 
 `hinq-credentials-v1.jsonld` is the JSON-LD context that defines the HINQ credential types and
-their fields. HINQ will publish it at an endpoint. Until then, `https://example.hinq.nl/credentials/v1`
-is a **placeholder** URL. The same placeholder is used as the `hinq:` term namespace inside the file,
-so replace both when the URL is known.
+their fields. HINQ will publish it at its context URL. Until then,
+`https://example.hinq.nl/credentials/v1` is a **placeholder** URL. The same placeholder is used as
+the `hinq:` term namespace inside the file, so replace both when the URL is known.
 
 | Type | Fields |
 |------|--------|
@@ -13,9 +13,9 @@ so replace both when the URL is known.
 | `HinqBsnCredential` | `credentialSubject.bsn` |
 
 The file follows the structure of the Nuts `NutsUraCredential` context. `organization` maps to
-`schema:organization`, like in the Nuts contexts. The other fields map to the `hinq:` namespace.
-Every term is protected, so a later context in a credential cannot redefine it. A field that
-the context does not define is dropped during JSON-LD processing and is not covered by the signature.
+`schema:organization`, as in the Nuts contexts. The other fields map to the `hinq:` namespace.
+Every term is protected, so a later context in a credential cannot redefine it. A field that the
+context does not define is dropped during JSON-LD processing and is not covered by the signature.
 
 Changing the context of an issued credential changes its canonical form and breaks its signature.
 Publish a changed context under a new URL, such as `.../v2`, and keep the old one available.
