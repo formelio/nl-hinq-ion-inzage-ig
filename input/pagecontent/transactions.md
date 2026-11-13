@@ -299,7 +299,8 @@ access token for all requests for this patient. It creates a new DPoP proof for 
 **Rules**
 
 - Every request **MUST** be scoped to the patient, with `patient={id}`.
-- Only search requests are allowed on individual resource types.
+- Only searches are allowed. Read requests on a single resource, such as
+  `GET {fhir_base}/Observation/{id}`, are not supported.
 - Only the resource types, search parameters and includes in the
   [CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html) are allowed.
 
@@ -400,7 +401,7 @@ following status codes:
 
 | Status | When |
 |--------|------|
-| `400 Bad Request` | The request does not follow the rules of the transaction or the CapabilityStatement. Examples are a GET-based patient search, a patient search that is not on BSN, a data request without a patient parameter, and a resource type or search parameter that the CapabilityStatement does not list. |
+| `400 Bad Request` | The request does not follow the rules of the transaction or the CapabilityStatement. Examples are a GET-based patient search, a patient search that is not on BSN, a data request without a patient parameter, a read request on a single resource, and a resource type or search parameter that the CapabilityStatement does not list. |
 | `401 Unauthorized` | The access token is missing, invalid or expired. Introspection returns `"active": false`. The same applies when the DPoP proof is missing or invalid, or when the token is not a DPoP token. |
 | `403 Forbidden` | The access token is valid, but the request does not meet the access rules. Examples are a missing consent and a request for another patient than the token is bound to. |
 | `429 Too Many Requests` | The data user sent too many requests. The `Retry-After` header says how many seconds to wait. HINQ sets the limits. |

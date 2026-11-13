@@ -48,6 +48,10 @@ data. A data user **MAY** add the optional search parameters listed in the
 [CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html). Other search parameters are not
 allowed.
 
+Read requests on a single resource are not supported. A reference between resources, such as a
+`Composition` that references its `Observation` lines, cannot be resolved with a read. The
+referenced resources are returned by the searches on this page or by their `_include`s.
+
 | Data element | Request |
 |--------------|---------|
 | Patient | `POST {fhir_base}/Patient/_search` with `identifier=http://fhir.nl/fhir/NamingSystem/bsn\|{bsn}` |
