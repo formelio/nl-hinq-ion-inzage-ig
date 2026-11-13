@@ -229,8 +229,8 @@ Content-Type: application/json
 ```
 
 The Nuts node checks the signature, the method, the URL, the thumbprint, the access token hash and
-the uniqueness of the proof. The `url` **MUST** be the URL the data user called, not a URL that a
-proxy rewrote. When the proof is invalid, the response has `"valid": false` and a `reason`.
+the uniqueness of the proof. When the proof is invalid, the response has `"valid": false` and a
+`reason`.
 
 ### Patient Search
 
