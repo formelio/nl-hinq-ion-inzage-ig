@@ -243,6 +243,8 @@ holder.
 - The search **MUST** be on BSN, with `identifier.system` `http://fhir.nl/fhir/NamingSystem/bsn`.
 - The search **MUST** use POST. GET-based search is not allowed.
 - The BSN in the search **MUST** be the BSN the access token is bound to.
+- The request **MUST** carry the `baggage` header with an `audit.event.id`. See
+  [Audit Event Id](exchange.html#audit-event-id).
 
 **Request**
 
@@ -250,6 +252,7 @@ holder.
 POST {fhir_base}/Patient/_search HTTP/1.1
 Authorization: DPoP <access token>
 DPoP: <DPoP proof>
+baggage: audit.event.id=3f2c8a1e-6b4d-4e9a-9c1f-2a7d5e8b0c44
 Content-Type: application/x-www-form-urlencoded
 
 identifier=http://fhir.nl/fhir/NamingSystem/bsn|123456782
@@ -299,6 +302,8 @@ access token for all requests for this patient. It creates a new DPoP proof for 
 **Rules**
 
 - Every request **MUST** be scoped to the patient, with `patient={id}`.
+- Every request **MUST** carry the `baggage` header with the same `audit.event.id` as the patient
+  search of this action. See [Audit Event Id](exchange.html#audit-event-id).
 - Only searches are allowed. Read requests on a single resource, such as
   `GET {fhir_base}/Observation/{id}`, are not supported.
 - Only the resource types, search parameters and includes in the
@@ -313,6 +318,7 @@ patient's observations.
 GET {fhir_base}/Observation?patient=patient-123 HTTP/1.1
 Authorization: DPoP <access token>
 DPoP: <DPoP proof>
+baggage: audit.event.id=3f2c8a1e-6b4d-4e9a-9c1f-2a7d5e8b0c44
 Accept: application/fhir+json
 ```
 
@@ -384,6 +390,7 @@ relation type `next`:
 - The data user **MUST** follow a `next` link to get all results. It **MUST** use the URL unchanged.
 - The data user **MUST** create a new DPoP proof for each page. The `htu` is the URL of the `next`
   link without query parameters.
+- Each page request carries the same `audit.event.id` as the first request.
 - The paging parameters in a `next` link are set by the data holder. They are allowed, although the
   CapabilityStatement does not list them. A data user **MUST NOT** add them itself.
 - When the access token expires while paging, the data user requests a new token and continues with
@@ -401,7 +408,7 @@ following status codes:
 
 | Status | When |
 |--------|------|
-| `400 Bad Request` | The request does not follow the rules of the transaction or the CapabilityStatement. Examples are a GET-based patient search, a patient search that is not on BSN, a data request without a patient parameter, a read request on a single resource, and a resource type or search parameter that the CapabilityStatement does not list. |
+| `400 Bad Request` | The request does not follow the rules of the transaction or the CapabilityStatement. Examples are a GET-based patient search, a patient search that is not on BSN, a request without a valid `audit.event.id`, a data request without a patient parameter, a read request on a single resource, and a resource type or search parameter that the CapabilityStatement does not list. |
 | `401 Unauthorized` | The access token is missing, invalid or expired. Introspection returns `"active": false`. The same applies when the DPoP proof is missing or invalid, or when the token is not a DPoP token. |
 | `403 Forbidden` | The access token is valid, but the request does not meet the access rules. Examples are a missing consent and a request for another patient than the token is bound to. |
 | `429 Too Many Requests` | The data user sent too many requests. The `Retry-After` header says how many seconds to wait. HINQ sets the limits. |

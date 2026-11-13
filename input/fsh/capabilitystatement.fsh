@@ -39,7 +39,7 @@ Description: "Requirements for the HINQ ION Inzage data holder: a BSN-based Pati
 
 * rest.mode = #server
 * rest.documentation = "All requests are patient-scoped. The data holder enforces the access rules and the consent check of the Exchange Architecture page. Resources are converted from STU3 and need not conform to nl-core profiles. Clients must not rely on _profile or meta.profile. Only the search parameters and includes listed here are allowed, plus the paging parameters in next links that the server returns."
-* rest.security.description = "Mutual TLS with PKIoverheid certificates. A DPoP-bound access token from the Nuts authorization server with scope ion_inzage. Every request carries a new DPoP proof."
+* rest.security.description = "Mutual TLS with PKIoverheid certificates. A DPoP-bound access token from the Nuts authorization server with scope ion_inzage. Every request carries a new DPoP proof and a baggage header with an audit.event.id."
 
 // Patient: POST-based search on BSN per IHE PDQm ITI-78
 * rest.resource[0].type = #Patient

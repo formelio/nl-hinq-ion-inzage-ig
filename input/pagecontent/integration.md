@@ -35,7 +35,7 @@ environment are not valid in the other.
 - A PKIoverheid client certificate for the data user application, issued under the G1 or the G4
   hierarchy. It is used for mTLS on the FHIR requests.
 - An application that authenticates healthcare professionals in its own user session.
-- `curl` and `jq`, to run the test requests in [Step 6](#step-6-test-the-connection).
+- `curl`, `jq` and `uuidgen`, to run the test requests in [Step 6](#step-6-test-the-connection).
 - Optional: a UZI server certificate, to use an `X509Credential` instead of the URA and AGB
   credentials.
 
@@ -343,12 +343,17 @@ The first argument is the HTTP method. The second is the URL without query param
 
 #### Search for the Patient
 
+Every FHIR request carries an audit event id. All requests of this test belong to one action, so
+they use the same id. See [Audit Event Id](exchange.html#audit-event-id).
+
 ```bash
+AUDIT_ID=$(uuidgen)
 URL=https://fhir.acc.example.hinq.nl/fhir/Patient/_search
 curl -X POST "$URL" \
   --cert client.pem --key client.key --cacert pkioverheid-g1-root.pem \
   -H "Authorization: DPoP $TOKEN" \
   -H "DPoP: $(dpop POST "$URL")" \
+  -H "baggage: audit.event.id=$AUDIT_ID" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   --data-urlencode "identifier=http://fhir.nl/fhir/NamingSystem/bsn|123456782"
 ```
@@ -364,6 +369,7 @@ curl "$URL?patient=<patient id>" \
   --cert client.pem --key client.key --cacert pkioverheid-g1-root.pem \
   -H "Authorization: DPoP $TOKEN" \
   -H "DPoP: $(dpop GET "$URL")" \
+  -H "baggage: audit.event.id=$AUDIT_ID" \
   -H "Accept: application/fhir+json"
 ```
 
@@ -393,7 +399,7 @@ The connection works when the first three requests succeed and the last one is d
 | Token request returns `503` | HINQ's authorization server cannot be reached. | Check the authorization server URL and outbound network access. |
 | Loading a credential returns `400` | The credential is invalid, or `credentialSubject.id` is not your DID. | Check that HINQ issued it to the DID of your subject. |
 | TLS handshake fails on a FHIR request | The client certificate is missing or not issued under G1 or G4, or the G1 root is not trusted. | See [Step 5](#step-5-configure-mtls-for-fhir-requests). |
-| FHIR request returns `400` | The request does not follow the CapabilityStatement, for example an unlisted resource type or search parameter. | Check the request against [Dataset](dataset.html#requests). |
+| FHIR request returns `400` | The `baggage` header with the `audit.event.id` is missing or not a UUID, or the request does not follow the CapabilityStatement, for example an unlisted resource type or search parameter. | Add the [audit event id](exchange.html#audit-event-id). Check the request against [Dataset](dataset.html#requests). |
 | FHIR request returns `401` | The access token is missing, invalid or expired, or the DPoP proof is missing or invalid. | Request a new access token. Create a new proof for every request, with the exact method and the URL without query parameters. Send the token with the `DPoP` scheme, not `Bearer`. |
 | FHIR request returns `403` | Access is denied, for example because the patient has no consent or the BSN differs from the token. | Check that the token was requested for the same BSN. |
 | FHIR request returns `429` | The data user sent too many requests. | Wait for the time in the `Retry-After` header. |

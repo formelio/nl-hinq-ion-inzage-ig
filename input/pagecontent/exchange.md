@@ -254,6 +254,30 @@ of this information.
 
 The data holder adds its own details to the consent check.
 
+#### Audit Event Id
+
+The data user and the data holder both log every access to patient data. The audit event id links
+the audit events of both parties to the same action of the healthcare professional. With it, an
+access can be traced from the data user's audit log to the data holder's audit log and back.
+
+The data user sends the id in a `baggage` header, as defined in
+[W3C Baggage](https://www.w3.org/TR/baggage/), with the key `audit.event.id`:
+
+```text
+baggage: audit.event.id=3f2c8a1e-6b4d-4e9a-9c1f-2a7d5e8b0c44
+```
+
+- Every FHIR request **MUST** carry the `baggage` header with an `audit.event.id`. The data holder
+  rejects a request without it, or with an id that is not a UUID, with `400 Bad Request`.
+- One id stands for one action of the healthcare professional, such as opening a patient. All FHIR
+  requests of that action carry the same id. These are the patient search, the data requests and
+  their pages.
+- The id **MUST** be a UUID, as defined in [RFC 9562](https://www.rfc-editor.org/rfc/rfc9562), in
+  its text form. It is the id of the matching event in the data user's own audit log.
+- The data holder records the id with its own audit events of the request.
+
+The token request does not carry the id. The token request goes to the data user's own Nuts node.
+
 #### Conformance
 
 The data holder **MUST** enforce the access rules described in [Data Request](#data-request).
@@ -269,6 +293,7 @@ The data user:
 - **MUST** request a separate access token for every patient.
 - **MUST** include a `HinqBsnCredential` with the patient's BSN in the access-token request.
 - **MUST** provide all information listed in [Consent](#consent).
+- **MUST** send an [audit event id](#audit-event-id) with every FHIR request.
 - **MUST** only request data for a patient with whom the healthcare professional has a treatment
   relationship. The data holder does not verify the treatment relationship. The data user remains
   responsible for it.
