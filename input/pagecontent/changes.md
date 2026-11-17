@@ -1,7 +1,18 @@
-### Version: 0.3.0 (Current)
+### Version: 0.4.0 (Current)
 
 - [Implementation Guide](https://formelio.github.io/nl-hinq-ion-inzage-ig/)
-- [Compare to v0.2.0](https://github.com/formelio/nl-hinq-ion-inzage-ig/compare/v0.2.0...main)
+- [Compare to v0.3.0](https://github.com/formelio/nl-hinq-ion-inzage-ig/compare/v0.3.0...main)
+
+Significant changes:
+
+- **AGB code from the X509Credential.** With an `X509Credential`, the data holder now also takes the
+  AGB code from the `otherName` field of the certificate. It is returned in the `organization_agb`
+  claim, like with the HINQ-issued credentials.
+
+### Version: 0.3.0
+
+- [Implementation Guide](https://formelio.github.io/nl-hinq-ion-inzage-ig/)
+- [Compare to v0.2.0](https://github.com/formelio/nl-hinq-ion-inzage-ig/compare/v0.2.0...v0.3.0)
 
 Significant changes:
 
@@ -98,7 +109,7 @@ always gericht bevragen, and organization credentials (URA, AGB and Zorgaanbiede
 HINQ.
 
 <!-- Template for future entries:
-### Version: 0.4.0
-- [Compare to v0.3.0](https://github.com/formelio/nl-hinq-ion-inzage-ig/compare/v0.3.0...main)
+### Version: 0.5.0
+- [Compare to v0.4.0](https://github.com/formelio/nl-hinq-ion-inzage-ig/compare/v0.4.0...main)
 - Significant changes:
 -->

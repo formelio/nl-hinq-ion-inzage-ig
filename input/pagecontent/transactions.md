@@ -196,9 +196,9 @@ Content-Type: application/json
 }
 ```
 
-The example shows the claims for the HINQ-issued credentials. With an `X509Credential`, the response
-has `organization_name` and `organization_city`, but not `organization_agb`. The Nuts node also
-returns the presented credentials. They are left out of the example.
+The example shows the claims for the HINQ-issued credentials. With an `X509Credential`, the URA and
+the AGB code are taken from the `otherName` field of the certificate, and the response also has
+`organization_name` and `organization_city`. The Nuts node also returns the presented credentials. They are left out of the example.
 
 The `cnf.jkt` claim is the thumbprint of the key the access token is bound to. The PDP **MUST**
 reject a token without `cnf.jkt`, because it is not a DPoP token.

@@ -175,9 +175,9 @@ repository. The data holder loads it into its Nuts node.
 
 The data user must present the [required credentials](#required-credentials). Their fields are
 described in [Credentials & Issuance](credentials.html#credential-specifications). When the PDP
-introspects the token, it gets the URA and the Zorgaanbiedertype back. With the HINQ-issued
-credentials, it also gets the AGB. The PDP uses the URA
-and the Zorgaanbiedertype for the consent check. See [Consent](#consent).
+introspects the token, it gets the URA, the AGB code and the Zorgaanbiedertype back. With an
+`X509Credential`, the URA and the AGB code come from the certificate. The PDP uses the URA and the
+Zorgaanbiedertype for the consent check. See [Consent](#consent).
 
 ##### NutsEmployeeCredential
 

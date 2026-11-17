@@ -5,7 +5,7 @@ requesting parties over Nuts. In this pilot stage, it exposes **Medicom** data t
 region viewers.
 
 - **Rendered guide:** <https://formelio.github.io/nl-hinq-ion-inzage-ig/>
-- **Status:** version 0.3.0, draft. This is a **proposition**, not a commitment to build or go
+- **Status:** version 0.4.0, draft. This is a **proposition**, not a commitment to build or go
   live. It is explicitly **not a 1.0**.
 
 ## Where to Start

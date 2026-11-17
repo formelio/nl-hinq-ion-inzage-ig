@@ -166,12 +166,13 @@ The credential differs from the HINQ-issued credentials in the following ways:
   certificate.
 - **Trust.** The data holder accepts the credential when the certificate chain leads to a CA of the
   UZI register. The certificate chain is checked for revocation.
-- **Content.** The `credentialSubject` only contains attributes of the certificate. The URA is taken
-  from the `otherName` field of the certificate's subject alternative name.
+- **Content.** The `credentialSubject` only contains attributes of the certificate. The URA and the
+  AGB code are taken from the `otherName` field of the certificate's subject alternative name. This
+  field has the form `2.16.528.1.1007.99.2110-1-{UZI}-S-{URA}-00.000-{AGB}`.
 - **Validity.** The credential cannot be valid longer than the certificate.
 - **Precedence.** A data user can hold both an `X509Credential` and the URA and AGB Credentials. In
-  that case, the `X509Credential` is presented, and the data holder uses the URA from the
-  `X509Credential`.
+  that case, the `X509Credential` is presented, and the data holder uses the URA and the AGB code
+  from the `X509Credential`.
 
 The following example shows the `credentialSubject` of the decoded JWT:
 

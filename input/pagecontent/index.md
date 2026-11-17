@@ -17,7 +17,7 @@ of organizations exchanging Medicom data with the Rivo-Noord viewers. It is a pl
 piloted with the building blocks available today. There is no commitment to use it, to bring it
 live, or to follow the Zorginzage governance, release schedule or planning. The architectural
 choices are made for what is practical and usable for this pilot, which is why the guide is
-versioned below 1.0. The current version is 0.3.0. The changes per version are listed in
+versioned below 1.0. The current version is 0.4.0. The changes per version are listed in
 [History](changes.html). The guiding principle is to reuse the building blocks that already exist.
 
 > **Versioning rule.** This specification is sized for a small pilot. Several choices are
