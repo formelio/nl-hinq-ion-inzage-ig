@@ -30,9 +30,12 @@ A data exchange consists of the following steps:
    `HinqBsnCredential`. The token is bound to that patient. See
    [Identification and Authentication](#identification-and-authentication) and
    [HinqBsnCredential](#hinqbsncredential).
-2. **Patient search.** The data user searches for the patient by BSN at the data holder to obtain the
-   patient's technical identifier.
-3. **Data request.** The data user requests data using that patient's technical identifier.
+2. **Data request.** The data user requests the patient's data, for example
+   `GET {fhir_base}/Observation`. The data holder returns only the data of the patient the access
+   token is bound to. The data user does not have to identify the patient in the request.
+
+The patient search on BSN is optional. The data user only needs it to retrieve the `Patient`
+resource itself, with the huisarts and the huisartsenpraktijk.
 
 The data holder performs three access checks. The details are in [Access Control](#access-control).
 
@@ -228,7 +231,8 @@ The access rules are:
   [DPoP Proof](transactions.html#dpop-proof).
 - Patient context is mandatory. The access token **MUST** be bound to a patient. The PDP takes the
   patient's BSN from the token, not from the request.
-- The requested data **MUST** belong to the patient the access token is bound to.
+- The data holder **MUST** only return data of the patient the access token is bound to. A request
+  that identifies another patient returns no data.
 - Explicit patient consent **MUST** be checked before returning data. See [Consent](#consent).
 
 **Why DPoP.** A Bearer token can be used by anyone who holds it. A DPoP token is bound to a key of
@@ -270,8 +274,8 @@ baggage: audit.event.id=3f2c8a1e-6b4d-4e9a-9c1f-2a7d5e8b0c44
 - Every FHIR request **MUST** carry the `baggage` header with an `audit.event.id`. The data holder
   rejects a request without it, or with an id that is not a UUID, with `400 Bad Request`.
 - One id stands for one action of the healthcare professional, such as opening a patient. All FHIR
-  requests of that action carry the same id. These are the patient search, the data requests and
-  their pages.
+  requests of that action carry the same id. These are the data requests, their pages and the
+  optional patient search.
 - The id **MUST** be a UUID, as defined in [RFC 9562](https://www.rfc-editor.org/rfc/rfc9562), in
   its text form. It is the id of the matching event in the data user's own audit log.
 - The data holder records the id with its own audit events of the request.

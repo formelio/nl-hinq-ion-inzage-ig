@@ -57,8 +57,8 @@ this pilot deviates from Zorginzage, the deviation is stated explicitly. The dev
   [DPoP Proof](transactions.html#dpop-proof).
 - **Consent.** The data holder checks the patient's consent at every request. See
   [Consent](exchange.html#consent).
-- **FHIR R4.** The data user searches for the patient by BSN and then requests the patient's data.
-  The allowed requests are listed in the
+- **FHIR R4.** The data user requests the patient's data per resource type. The data holder takes
+  the patient from the access token. The allowed requests are listed in the
   [CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html).
 - **Audit event id.** Every FHIR request carries an audit event id in a `baggage` header. It links
   the audit logs of the data user and the data holder. See

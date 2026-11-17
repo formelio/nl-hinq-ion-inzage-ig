@@ -358,14 +358,14 @@ curl -X POST "$URL" \
   --data-urlencode "identifier=http://fhir.nl/fhir/NamingSystem/bsn|123456782"
 ```
 
-**Expected:** `200 OK` with a Bundle that contains one Patient. Note the Patient's `id` for the next
-request. See [Patient Search](transactions.html#patient-search).
+**Expected:** `200 OK` with a Bundle that contains one Patient. See
+[Patient Search](transactions.html#patient-search).
 
 #### Request Data
 
 ```bash
 URL=https://fhir.acc.example.hinq.nl/fhir/Observation
-curl "$URL?patient=<patient id>" \
+curl "$URL" \
   --cert client.pem --key client.key --cacert pkioverheid-g1-root.pem \
   -H "Authorization: DPoP $TOKEN" \
   -H "DPoP: $(dpop GET "$URL")" \
@@ -401,7 +401,8 @@ The connection works when the first three requests succeed and the last one is d
 | TLS handshake fails on a FHIR request | The client certificate is missing or not issued under G1 or G4, or the G1 root is not trusted. | See [Step 5](#step-5-configure-mtls-for-fhir-requests). |
 | FHIR request returns `400` | The `baggage` header with the `audit.event.id` is missing or not a UUID, or the request does not follow the CapabilityStatement, for example an unlisted resource type or search parameter. | Add the [audit event id](exchange.html#audit-event-id). Check the request against [Dataset](dataset.html#requests). |
 | FHIR request returns `401` | The access token is missing, invalid or expired, or the DPoP proof is missing or invalid. | Request a new access token. Create a new proof for every request, with the exact method and the URL without query parameters. Send the token with the `DPoP` scheme, not `Bearer`. |
-| FHIR request returns `403` | Access is denied, for example because the patient has no consent or the BSN differs from the token. | Check that the token was requested for the same BSN. |
+| FHIR request returns `403` | Access is denied, for example because the patient has no consent. | Check that the patient has given consent. |
+| FHIR request returns an empty Bundle | The patient search or the `patient` parameter is for another patient than the access token is bound to. | Request the token for the same BSN as the search. |
 | FHIR request returns `429` | The data user sent too many requests. | Wait for the time in the `Retry-After` header. |
 | FHIR request returns `502`, `503` or `504` | A source system, the consent check or the HINQ ION service is not available. | Retry later. See [Errors](transactions.html#errors). |
 

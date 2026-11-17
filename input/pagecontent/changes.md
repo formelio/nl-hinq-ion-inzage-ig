@@ -8,6 +8,11 @@ Significant changes:
 - **Audit event id.** Every FHIR request carries a `baggage` header with an `audit.event.id`. It
   links the audit events of the data user and the data holder for one action of the healthcare
   professional. The id is a UUID. A request without a valid id gets `400`.
+- **Data requests scoped by the token.** The data holder takes the patient from the access token. A
+  data request no longer needs `patient={id}`, for example `GET {fhir_base}/Observation`. The
+  `patient` parameter is optional. An id of another patient than the token's returns an empty
+  Bundle. The same applies to a patient search for another BSN. The patient search on BSN is
+  optional and only needed to retrieve the `Patient` resource.
 - **Read requests not supported.** The guide states explicitly that read requests on a single
   resource are not supported. References between resources are resolved with the searches of the
   Dataset and their `_include`s. A read request gets `400`.

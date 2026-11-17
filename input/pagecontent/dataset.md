@@ -39,10 +39,11 @@ source profiles start with `http://nictiz.nl/fhir/StructureDefinition/`.
 
 ### Requests
 
-Every request below follows the rules of [Transactions](transactions.html). `{id}` is the
-patient's logical id from the patient search.
+Every request below follows the rules of [Transactions](transactions.html). The requests do not
+identify the patient. The data holder returns only the data of the patient the access token is
+bound to.
 
-The requests are generic. They select data by resource type and patient. Because the R4 resources
+The requests are generic. They select data by resource type. Because the R4 resources
 are converted, a data user **MUST NOT** rely on `_profile` or `meta.profile` to select or recognize
 data. A data user **MAY** add the optional search parameters listed in the
 [CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html). Other search parameters are not
@@ -56,17 +57,17 @@ referenced resources are returned by the searches on this page or by their `_inc
 |--------------|---------|
 | Patient | `POST {fhir_base}/Patient/_search` with `identifier=http://fhir.nl/fhir/NamingSystem/bsn\|{bsn}` |
 | Huisarts and huisartsenpraktijk | Add `_include=Patient:general-practitioner` to the patient search |
-| Episodes | `GET {fhir_base}/EpisodeOfCare?patient={id}` |
-| Attention flags | `GET {fhir_base}/Flag?patient={id}` |
-| Medication agreements | `GET {fhir_base}/MedicationRequest?patient={id}&_include=MedicationRequest:medication` |
-| Medication allergies | `GET {fhir_base}/AllergyIntolerance?patient={id}` |
-| Measurements and results | `GET {fhir_base}/Observation?patient={id}` |
-| SOEP reports | `GET {fhir_base}/Composition?patient={id}` |
-| Contacts | `GET {fhir_base}/Encounter?patient={id}` |
+| Episodes | `GET {fhir_base}/EpisodeOfCare` |
+| Attention flags | `GET {fhir_base}/Flag` |
+| Medication agreements | `GET {fhir_base}/MedicationRequest?_include=MedicationRequest:medication` |
+| Medication allergies | `GET {fhir_base}/AllergyIntolerance` |
+| Measurements and results | `GET {fhir_base}/Observation` |
+| SOEP reports | `GET {fhir_base}/Composition` |
+| Contacts | `GET {fhir_base}/Encounter` |
 
 #### Patient
 
-The patient search returns the patient. With `_include=Patient:general-practitioner`, it also
+The patient search is optional. It returns the patient. With `_include=Patient:general-practitioner`, it also
 returns the huisarts and the huisartsenpraktijk that `Patient.generalPractitioner` references:
 
 ```http
