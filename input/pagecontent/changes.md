@@ -1,7 +1,26 @@
-### Version: 0.2.0 (Current)
+### Version: 0.3.0 (Current)
 
 - [Implementation Guide](https://formelio.github.io/nl-hinq-ion-inzage-ig/)
-- [Compare to v0.1.0](https://github.com/formelio/nl-hinq-ion-inzage-ig/compare/v0.1.0...main)
+- [Compare to v0.2.0](https://github.com/formelio/nl-hinq-ion-inzage-ig/compare/v0.2.0...main)
+
+Significant changes:
+
+- **Audit event id.** Every FHIR request carries a `baggage` header with an `audit.event.id`. It
+  links the audit events of the data user and the data holder for one action of the healthcare
+  professional. The id is a UUID. A request without a valid id gets `400`.
+- **Data requests scoped by the token.** The data holder takes the patient from the access token. A
+  data request no longer needs `patient={id}`, for example `GET {fhir_base}/Observation`. The
+  `patient` parameter is optional. An id of another patient than the token's returns an empty
+  Bundle. The same applies to a patient search for another BSN. The patient search on BSN is
+  optional and only needed to retrieve the `Patient` resource.
+- **Read requests not supported.** The guide states explicitly that read requests on a single
+  resource are not supported. References between resources are resolved with the searches of the
+  Dataset and their `_include`s. A read request gets `400`.
+
+### Version: 0.2.0
+
+- [Implementation Guide](https://formelio.github.io/nl-hinq-ion-inzage-ig/)
+- [Compare to v0.1.0](https://github.com/formelio/nl-hinq-ion-inzage-ig/compare/v0.1.0...v0.2.0)
 
 Significant changes:
 
@@ -79,7 +98,7 @@ always gericht bevragen, and organization credentials (URA, AGB and Zorgaanbiede
 HINQ.
 
 <!-- Template for future entries:
-### Version: 0.3.0
-- [Compare to v0.2.0](https://github.com/formelio/nl-hinq-ion-inzage-ig/compare/v0.2.0...main)
+### Version: 0.4.0
+- [Compare to v0.3.0](https://github.com/formelio/nl-hinq-ion-inzage-ig/compare/v0.3.0...main)
 - Significant changes:
 -->

@@ -17,7 +17,7 @@ of organizations exchanging Medicom data with the Rivo-Noord viewers. It is a pl
 piloted with the building blocks available today. There is no commitment to use it, to bring it
 live, or to follow the Zorginzage governance, release schedule or planning. The architectural
 choices are made for what is practical and usable for this pilot, which is why the guide is
-versioned below 1.0. The current version is 0.2.0. The changes per version are listed in
+versioned below 1.0. The current version is 0.3.0. The changes per version are listed in
 [History](changes.html). The guiding principle is to reuse the building blocks that already exist.
 
 > **Versioning rule.** This specification is sized for a small pilot. Several choices are
@@ -57,9 +57,12 @@ this pilot deviates from Zorginzage, the deviation is stated explicitly. The dev
   [DPoP Proof](transactions.html#dpop-proof).
 - **Consent.** The data holder checks the patient's consent at every request. See
   [Consent](exchange.html#consent).
-- **FHIR R4.** The data user searches for the patient by BSN and then requests the patient's data.
-  The allowed requests are listed in the
+- **FHIR R4.** The data user requests the patient's data per resource type. The data holder takes
+  the patient from the access token. The allowed requests are listed in the
   [CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html).
+- **Audit event id.** Every FHIR request carries an audit event id in a `baggage` header. It links
+  the audit logs of the data user and the data holder. See
+  [Audit Event Id](exchange.html#audit-event-id).
 - **Mutual TLS.** The FHIR requests use mutual TLS with PKIoverheid certificates. See
   [Network Security](exchange.html#network-security).
 

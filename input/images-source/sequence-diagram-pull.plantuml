@@ -32,7 +32,7 @@ App -> UserNode ++ : Request access token\nwith NutsEmployeeCredential and HinqB
 UserNode <-> HolderNode : Presentation definition and\nVerifiable Presentation
 UserNode --> App -- : DPoP access token,\nbound to this patient
 
-== Patient Search ==
+== Patient Search (optional) ==
 
 App -> UserNode ++ : Create DPoP proof
 UserNode --> App -- : DPoP proof
@@ -46,20 +46,20 @@ PDP -> Ion ++ : POST /Patient/_search
 Ion -> Src ++ : Request the patient
 Src --> Ion -- : Patient
 Ion --> PDP -- : Bundle with the Patient
-PDP --> App -- : Bundle with the Patient\nand its logical id
+PDP --> App -- : Bundle with the Patient
 
 == Data Request ==
 
 loop For each resource type
   App -> UserNode ++ : Create DPoP proof
   UserNode --> App -- : DPoP proof
-  App -> PDP ++ : GET /{resource}?patient={id}
+  App -> PDP ++ : GET /{resource}
   PDP -> HolderNode ++ : Token introspection
   HolderNode --> PDP -- : Claims
   PDP -> HolderNode ++ : Validate DPoP proof
   HolderNode --> PDP -- : Valid
   PDP -> PDP : Check the access rules\nand the patient's consent
-  PDP -> Ion ++ : GET /{resource}?patient={id}
+  PDP -> Ion ++ : GET /{resource}\nfor the patient's BSN
   Ion -> Src ++ : Request the data
   Src --> Ion -- : Data
   Ion --> PDP -- : Bundle

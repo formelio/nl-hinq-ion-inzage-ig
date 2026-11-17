@@ -29,16 +29,18 @@ The sequence diagram shows a data user retrieving data for one patient.
 | HINQ ION service | Receives the FHIR requests that the PDP allows. It acts as a proxy and retrieves the data from the source organizations. It handles the authorization towards those organizations. |
 | Source system | The system of a source healthcare organization that holds the data. |
 
-The interaction has four steps:
+The interaction has three steps:
 
 1. **Log in.** The healthcare professional logs in to the data user application. The application
    keeps the details it needs for the `NutsEmployeeCredential`.
 2. **[Access Token Request](#access-token-request).** The data user requests an access token for one
    patient. The data user knows the data holder's endpoints up front. See
    [Addressing](exchange.html#addressing).
-3. **[Patient Search](#patient-search).** The data user searches for the patient by BSN to get the
-   patient's logical id at the data holder.
-4. **[Data Request](#data-request).** The data user requests the patient's data with that logical id.
+3. **[Data Request](#data-request).** The data user requests the patient's data. The data holder
+   returns only the data of the patient the access token is bound to.
+
+The [Patient Search](#patient-search) is optional. The data user only needs it to retrieve the
+`Patient` resource, with the huisarts and the huisartsenpraktijk.
 
 The access token is a DPoP token. Before every FHIR request, the data user creates a
 [DPoP Proof](#dpop-proof). At every FHIR request, the PDP checks the token through
@@ -229,20 +231,23 @@ Content-Type: application/json
 ```
 
 The Nuts node checks the signature, the method, the URL, the thumbprint, the access token hash and
-the uniqueness of the proof. The `url` **MUST** be the URL the data user called, not a URL that a
-proxy rewrote. When the proof is invalid, the response has `"valid": false` and a `reason`.
+the uniqueness of the proof. When the proof is invalid, the response has `"valid": false` and a
+`reason`.
 
 ### Patient Search
 
-The data user searches for the patient by BSN. The result gives the patient's logical id at the data
-holder.
+The patient search is optional. The data user searches for the patient by BSN to retrieve the
+`Patient` resource. The data requests do not need the result.
 
 **Rules**
 
 - The search **MUST** follow [IHE PDQm ITI-78](https://profiles.ihe.net/ITI/PDQm/ITI-78.html).
 - The search **MUST** be on BSN, with `identifier.system` `http://fhir.nl/fhir/NamingSystem/bsn`.
 - The search **MUST** use POST. GET-based search is not allowed.
-- The BSN in the search **MUST** be the BSN the access token is bound to.
+- The BSN in the search **MUST** be the BSN the access token is bound to. The data holder searches
+  by the BSN in the access token. A search for another BSN returns `200 OK` with an empty Bundle.
+- The request **MUST** carry the `baggage` header with an `audit.event.id`. See
+  [Audit Event Id](exchange.html#audit-event-id).
 
 **Request**
 
@@ -250,6 +255,7 @@ holder.
 POST {fhir_base}/Patient/_search HTTP/1.1
 Authorization: DPoP <access token>
 DPoP: <DPoP proof>
+baggage: audit.event.id=3f2c8a1e-6b4d-4e9a-9c1f-2a7d5e8b0c44
 Content-Type: application/x-www-form-urlencoded
 
 identifier=http://fhir.nl/fhir/NamingSystem/bsn|123456782
@@ -293,13 +299,20 @@ the huisartsenpraktijk. See [Patient](dataset.html#patient) in the Dataset.
 
 ### Data Request
 
-The data user requests the patient's data with the logical id from the patient search. It reuses the
-access token for all requests for this patient. It creates a new DPoP proof for every request.
+The data user requests the patient's data. The data holder takes the patient from the access token
+and returns only the data of that patient. The data user reuses the access token for all requests
+for this patient. It creates a new DPoP proof for every request.
 
 **Rules**
 
-- Every request **MUST** be scoped to the patient, with `patient={id}`.
-- Only search requests are allowed on individual resource types.
+- The request does not need a patient parameter. A data user **MAY** add `patient={id}` with the
+  patient's logical id from the patient search. The data holder retrieves the data by the BSN in the
+  access token. When the id does not belong to that patient, the response is `200 OK` with an empty
+  Bundle.
+- Every request **MUST** carry the `baggage` header. All requests of one action carry the same
+  `audit.event.id`. See [Audit Event Id](exchange.html#audit-event-id).
+- Only searches are allowed. Read requests on a single resource, such as
+  `GET {fhir_base}/Observation/{id}`, are not supported.
 - Only the resource types, search parameters and includes in the
   [CapabilityStatement](CapabilityStatement-HINQIONDataHolder.html) are allowed.
 
@@ -309,9 +322,10 @@ access token for all requests for this patient. It creates a new DPoP proof for 
 patient's observations.
 
 ```http
-GET {fhir_base}/Observation?patient=patient-123 HTTP/1.1
+GET {fhir_base}/Observation HTTP/1.1
 Authorization: DPoP <access token>
 DPoP: <DPoP proof>
+baggage: audit.event.id=3f2c8a1e-6b4d-4e9a-9c1f-2a7d5e8b0c44
 Accept: application/fhir+json
 ```
 
@@ -373,8 +387,8 @@ relation type `next`:
 
 ```json
 "link": [
-  { "relation": "self", "url": "{fhir_base}/Observation?patient=patient-123" },
-  { "relation": "next", "url": "{fhir_base}/Observation?patient=patient-123&<paging parameters>" }
+  { "relation": "self", "url": "{fhir_base}/Observation" },
+  { "relation": "next", "url": "{fhir_base}/Observation?<paging parameters>" }
 ]
 ```
 
@@ -383,6 +397,7 @@ relation type `next`:
 - The data user **MUST** follow a `next` link to get all results. It **MUST** use the URL unchanged.
 - The data user **MUST** create a new DPoP proof for each page. The `htu` is the URL of the `next`
   link without query parameters.
+- Each page request carries the same `audit.event.id` as the first request.
 - The paging parameters in a `next` link are set by the data holder. They are allowed, although the
   CapabilityStatement does not list them. A data user **MUST NOT** add them itself.
 - When the access token expires while paging, the data user requests a new token and continues with
@@ -400,9 +415,9 @@ following status codes:
 
 | Status | When |
 |--------|------|
-| `400 Bad Request` | The request does not follow the rules of the transaction or the CapabilityStatement. Examples are a GET-based patient search, a patient search that is not on BSN, a data request without a patient parameter, and a resource type or search parameter that the CapabilityStatement does not list. |
+| `400 Bad Request` | The request does not follow the rules of the transaction or the CapabilityStatement. Examples are a GET-based patient search, a patient search that is not on BSN, a request without a valid `audit.event.id`, a read request on a single resource, and a resource type or search parameter that the CapabilityStatement does not list. |
 | `401 Unauthorized` | The access token is missing, invalid or expired. Introspection returns `"active": false`. The same applies when the DPoP proof is missing or invalid, or when the token is not a DPoP token. |
-| `403 Forbidden` | The access token is valid, but the request does not meet the access rules. Examples are a missing consent and a request for another patient than the token is bound to. |
+| `403 Forbidden` | The access token is valid, but the request does not meet the access rules. An example is a missing consent. |
 | `429 Too Many Requests` | The data user sent too many requests. The `Retry-After` header says how many seconds to wait. HINQ sets the limits. |
 | `502 Bad Gateway` | A source system returned an invalid response. |
 | `503 Service Unavailable` | The HINQ ION service or the consent check is temporarily not available. |
